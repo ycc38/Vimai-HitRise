@@ -191,7 +191,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     }
 
     private static func isBoxingDeviceName(_ name: String) -> Bool {
-        guard name.localizedCaseInsensitiveHasPrefix(Constants.devicePrefix),
+        guard name.range(of: Constants.devicePrefix, options: [.caseInsensitive, .anchored]) != nil,
               let last = name.last else {
             return false
         }
