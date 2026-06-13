@@ -9,7 +9,7 @@ struct DeviceView: View {
                 Section("连接状态") {
                     HStack {
                         Image(systemName: app.ble.connectedDevice == nil ? "bluetooth.slash" : "bluetooth")
-                            .foregroundStyle(app.ble.connectedDevice == nil ? .secondary : .blue)
+                            .foregroundStyle(app.ble.connectedDevice == nil ? Color.secondary : Color.blue)
                         VStack(alignment: .leading) {
                             Text(app.ble.connectedDevice?.name ?? "未连接")
                             Text(app.ble.statusMessage)
