@@ -32,7 +32,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         }
         devices.removeAll()
         peripherals.removeAll()
-        central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+        central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
         statusMessage = "正在扫描 SENBALL# 设备..."
     }
 
@@ -96,14 +96,14 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         _ = setGyroscopeEnabled(command)
     }
 
-    private func addOrUpdate(peripheral: CBPeripheral, rssi: NSNumber, advertisedName: String?) {
-        let name = advertisedName?.trimmingCharacters(in: .whitespacesAndNewlines)
-            ?? peripheral.name?.trimmingCharacters(in: .whitespacesAndNewlines)
-            ?? ""
-        guard SensorBallBLEManager.isBoxingDeviceName(name) else {
+    private func addOrUpdate(peripheral: CBPeripheral, rssi: NSNumber, advertisementData: [String: Any]) {
+        let names = SensorBallBLEManager.nameCandidates(from: advertisementData, peripheralName: peripheral.name)
+        let matchedName = names.first(where: SensorBallBLEManager.isBoxingDeviceName)
+        guard matchedName != nil || SensorBallBLEManager.hasCompatibleSerialAdvertisement(advertisementData) else {
             return
         }
         peripherals[peripheral.identifier] = peripheral
+        let name = matchedName ?? names.first ?? SensorBallBLEManager.fallbackDisplayName(for: peripheral)
         let item = SensorBallDeviceInfo(id: peripheral.identifier, name: name, rssi: rssi.intValue)
         if let index = devices.firstIndex(where: { $0.id == item.id }) {
             devices[index] = item
@@ -190,23 +190,104 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         return uuid.contains("ffe4") || service.contains("ffe0") || service.contains("ffe5")
     }
 
-    private static func isBoxingDeviceName(_ name: String) -> Bool {
-        guard name.range(of: Constants.devicePrefix, options: [.caseInsensitive, .anchored]) != nil,
-              let last = name.last else {
+    static func isBoxingDeviceName(_ name: String) -> Bool {
+        let normalized = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty,
+              normalized.range(of: Constants.deviceBrand, options: [.caseInsensitive]) != nil else {
             return false
         }
-        return isEnglishLetter(last)
+        return true
     }
 
-    private static func isEnglishLetter(_ character: Character) -> Bool {
+    private static func nameCandidates(from advertisementData: [String: Any], peripheralName: String?) -> [String] {
+        var candidates: [String] = []
+        appendCandidate(advertisementData[CBAdvertisementDataLocalNameKey] as? String, to: &candidates)
+        appendCandidate(peripheralName, to: &candidates)
+        if let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data {
+            appendCandidate(extractBoxingName(from: manufacturerData), to: &candidates)
+        }
+        if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] {
+            serviceData.values.forEach { data in
+                appendCandidate(extractBoxingName(from: data), to: &candidates)
+            }
+        }
+        return candidates
+    }
+
+    private static func appendCandidate(_ candidate: String?, to candidates: inout [String]) {
+        guard let candidate = candidate?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !candidate.isEmpty,
+              !candidates.contains(where: { $0.compare(candidate, options: .caseInsensitive) == .orderedSame }) else {
+            return
+        }
+        candidates.append(candidate)
+    }
+
+    private static func extractBoxingName(from data: Data) -> String? {
+        let texts = [
+            String(data: data, encoding: .utf8),
+            String(data: data, encoding: .isoLatin1)
+        ].compactMap { $0 }
+        for text in texts {
+            if let name = extractBoxingName(from: text) {
+                return name
+            }
+        }
+        return nil
+    }
+
+    private static func extractBoxingName(from text: String) -> String? {
+        guard let range = text.range(of: Constants.deviceBrand, options: .caseInsensitive) else {
+            return nil
+        }
+        var end = range.lowerBound
+        while end < text.endIndex, isDeviceNameCharacter(text[end]) {
+            end = text.index(after: end)
+        }
+        let name = String(text[range.lowerBound..<end])
+        return isBoxingDeviceName(name) ? name : nil
+    }
+
+    private static func isDeviceNameCharacter(_ character: Character) -> Bool {
         guard let scalar = character.unicodeScalars.first, character.unicodeScalars.count == 1 else {
             return false
         }
-        return (65...90).contains(Int(scalar.value)) || (97...122).contains(Int(scalar.value))
+        let value = Int(scalar.value)
+        return (65...90).contains(value) ||
+            (97...122).contains(value) ||
+            (48...57).contains(value) ||
+            character == "#" ||
+            character == "_" ||
+            character == "-"
+    }
+
+    private static func hasCompatibleSerialAdvertisement(_ advertisementData: [String: Any]) -> Bool {
+        let uuidCollections = [
+            advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
+            advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID],
+            advertisementData[CBAdvertisementDataSolicitedServiceUUIDsKey] as? [CBUUID]
+        ]
+        if uuidCollections.compactMap({ $0 }).flatMap({ $0 }).contains(where: { isCompatibleSerialUUID($0) }) {
+            return true
+        }
+        if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] {
+            return serviceData.keys.contains(where: { isCompatibleSerialUUID($0) }) ||
+                serviceData.values.contains(where: { extractBoxingName(from: $0) != nil })
+        }
+        return false
+    }
+
+    private static func isCompatibleSerialUUID(_ uuid: CBUUID) -> Bool {
+        let text = uuid.uuidString.lowercased()
+        return text.contains("ffe0") || text.contains("ffe1") || text.contains("ffe4") || text.contains("ffe5") || text.contains("ffe9")
+    }
+
+    private static func fallbackDisplayName(for peripheral: CBPeripheral) -> String {
+        "SENBALL BLE \(peripheral.identifier.uuidString.prefix(4))"
     }
 
     private enum Constants {
-        static let devicePrefix = "SENBALL#"
+        static let deviceBrand = "SENBALL"
         static let telemetryPacketSize = 11
         static let sensorForceScale = 0.6
     }
@@ -235,8 +316,7 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        let advertisedName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
-        addOrUpdate(peripheral: peripheral, rssi: RSSI, advertisedName: advertisedName)
+        addOrUpdate(peripheral: peripheral, rssi: RSSI, advertisementData: advertisementData)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
