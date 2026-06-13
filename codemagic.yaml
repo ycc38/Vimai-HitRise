@@ -44,6 +44,8 @@ workflows:
     name: Vimai HitRise Signed IPA
     max_build_duration: 60
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: "Codemagic App Store Connect"
     environment:
       xcode: latest
       ios_signing:
@@ -58,10 +60,18 @@ workflows:
         script: xcode-project use-profiles
       - name: Build signed IPA
         script: |
+          BUILD_NUMBER_TO_USE="${PROJECT_BUILD_NUMBER:-${BUILD_NUMBER:-1}}"
+          echo "Using TestFlight build number: $BUILD_NUMBER_TO_USE"
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$BUILD_NUMBER_TO_USE"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
