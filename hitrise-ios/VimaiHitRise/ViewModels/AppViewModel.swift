@@ -26,6 +26,28 @@ final class AppViewModel: ObservableObject {
 
     init(api: HitRiseAPIClient = HitRiseAPIClient()) {
         self.api = api
+        Publishers.MergeMany([
+            ble.$bluetoothState.map { _ in () }.eraseToAnyPublisher(),
+            ble.$devices.map { _ in () }.eraseToAnyPublisher(),
+            ble.$connectedDevice.map { _ in () }.eraseToAnyPublisher(),
+            ble.$statusMessage.map { _ in () }.eraseToAnyPublisher(),
+            ble.$lastScanDebugText.map { _ in () }.eraseToAnyPublisher()
+        ])
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.objectWillChange.send()
+                }
+            }
+            .store(in: &cancellables)
+        training.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.objectWillChange.send()
+                }
+            }
+            .store(in: &cancellables)
         ble.$latestTelemetry
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)

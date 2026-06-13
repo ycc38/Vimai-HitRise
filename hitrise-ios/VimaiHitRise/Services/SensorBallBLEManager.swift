@@ -19,7 +19,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        central = CBCentralManager(delegate: self, queue: nil)
+        central = CBCentralManager(delegate: self, queue: .main)
     }
 
     var isReadyForCounting: Bool {
