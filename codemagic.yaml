@@ -19,16 +19,24 @@ workflows:
     scripts:
       - name: Show Xcode version
         script: xcodebuild -version
+      - name: Show project schemes
+        script: xcodebuild -list -project "$CM_BUILD_DIR/$XCODE_PROJECT"
       - name: Build app for iOS Simulator
         script: |
-          xcodebuild build \
+          xcodebuild clean build \
             -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
             -configuration Debug \
+            -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath "$CM_BUILD_DIR/build/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
     artifacts:
       - /tmp/xcodebuild_logs/*.log
+      - build/DerivedData/**/Build/**/*.app
+      - build/DerivedData/**/Build/**/*.dSYM
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
