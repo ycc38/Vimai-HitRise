@@ -1,0 +1,66 @@
+workflows:
+  ios-simulator-build:
+    name: Vimai HitRise iOS Simulator Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      vars:
+        XCODE_PROJECT: "hitrise-ios/VimaiHitRise.xcodeproj"
+        XCODE_SCHEME: "VimaiHitRise"
+        BUNDLE_ID: "com.zclei.hitrise"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Show Xcode version
+        script: xcodebuild -version
+      - name: Build app for iOS Simulator
+        script: |
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+  ios-app-store-ipa:
+    name: Vimai HitRise App Store IPA
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.zclei.hitrise
+      vars:
+        XCODE_PROJECT: "hitrise-ios/VimaiHitRise.xcodeproj"
+        XCODE_SCHEME: "VimaiHitRise"
+        BUNDLE_ID: "com.zclei.hitrise"
+    integrations:
+      app_store_connect: codemagic
+    scripts:
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
