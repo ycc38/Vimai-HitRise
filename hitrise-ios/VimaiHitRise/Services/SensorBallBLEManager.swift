@@ -33,7 +33,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         devices.removeAll()
         peripherals.removeAll()
         central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
-        statusMessage = "正在扫描 SENBALL# 设备..."
+        statusMessage = "正在扫描附近 BLE 设备..."
     }
 
     func stopScan() {
@@ -99,18 +99,32 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     private func addOrUpdate(peripheral: CBPeripheral, rssi: NSNumber, advertisementData: [String: Any]) {
         let names = SensorBallBLEManager.nameCandidates(from: advertisementData, peripheralName: peripheral.name)
         let matchedName = names.first(where: SensorBallBLEManager.isBoxingDeviceName)
-        guard matchedName != nil || SensorBallBLEManager.hasCompatibleSerialAdvertisement(advertisementData) else {
-            return
-        }
+        let hasCompatibleAdvertisement = SensorBallBLEManager.hasCompatibleSerialAdvertisement(advertisementData)
+        let isLikelySensorBall = matchedName != nil || hasCompatibleAdvertisement
         peripherals[peripheral.identifier] = peripheral
         let name = matchedName ?? names.first ?? SensorBallBLEManager.fallbackDisplayName(for: peripheral)
-        let item = SensorBallDeviceInfo(id: peripheral.identifier, name: name, rssi: rssi.intValue)
+        let item = SensorBallDeviceInfo(
+            id: peripheral.identifier,
+            name: name,
+            rssi: rssi.intValue,
+            isLikelySensorBall: isLikelySensorBall,
+            detail: SensorBallBLEManager.discoveryDetail(
+                names: names,
+                advertisementData: advertisementData,
+                isLikelySensorBall: isLikelySensorBall
+            )
+        )
         if let index = devices.firstIndex(where: { $0.id == item.id }) {
             devices[index] = item
         } else {
             devices.append(item)
         }
-        devices.sort { $0.rssi > $1.rssi }
+        devices.sort {
+            if $0.isLikelySensorBall != $1.isLikelySensorBall {
+                return $0.isLikelySensorBall && !$1.isLikelySensorBall
+            }
+            return $0.rssi > $1.rssi
+        }
     }
 
     private func configure(characteristic: CBCharacteristic, on peripheral: CBPeripheral) {
@@ -275,6 +289,39 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
                 serviceData.values.contains(where: { extractBoxingName(from: $0) != nil })
         }
         return false
+    }
+
+    private static func discoveryDetail(
+        names: [String],
+        advertisementData: [String: Any],
+        isLikelySensorBall: Bool
+    ) -> String {
+        var parts = [isLikelySensorBall ? "SENBALL/BLE" : "BLE"]
+        if let name = names.first, !name.isEmpty {
+            parts.append(name)
+        }
+        let uuids = advertisedServiceUUIDs(from: advertisementData)
+        if !uuids.isEmpty {
+            parts.append(uuids.prefix(3).joined(separator: ","))
+        }
+        return parts.joined(separator: " | ")
+    }
+
+    private static func advertisedServiceUUIDs(from advertisementData: [String: Any]) -> [String] {
+        var uuids: [CBUUID] = []
+        if let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] {
+            uuids.append(contentsOf: serviceUUIDs)
+        }
+        if let overflowUUIDs = advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID] {
+            uuids.append(contentsOf: overflowUUIDs)
+        }
+        if let solicitedUUIDs = advertisementData[CBAdvertisementDataSolicitedServiceUUIDsKey] as? [CBUUID] {
+            uuids.append(contentsOf: solicitedUUIDs)
+        }
+        if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] {
+            uuids.append(contentsOf: serviceData.keys)
+        }
+        return uuids.map(\.uuidString)
     }
 
     private static func isCompatibleSerialUUID(_ uuid: CBUUID) -> Bool {

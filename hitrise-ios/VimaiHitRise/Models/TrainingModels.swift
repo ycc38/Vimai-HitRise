@@ -58,6 +58,16 @@ struct SensorBallDeviceInfo: Identifiable, Equatable {
     let id: UUID
     let name: String
     let rssi: Int
+    let isLikelySensorBall: Bool
+    let detail: String
+
+    init(id: UUID, name: String, rssi: Int, isLikelySensorBall: Bool = true, detail: String = "") {
+        self.id = id
+        self.name = name
+        self.rssi = rssi
+        self.isLikelySensorBall = isLikelySensorBall
+        self.detail = detail
+    }
 }
 
 struct SensorBallTelemetry: Equatable {

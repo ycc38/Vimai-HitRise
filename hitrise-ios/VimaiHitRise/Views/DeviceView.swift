@@ -30,7 +30,7 @@ struct DeviceView: View {
                     Button {
                         app.ble.startScan()
                     } label: {
-                        Label("扫描 SENBALL 设备", systemImage: "magnifyingglass")
+                        Label("扫描附近 BLE 设备", systemImage: "magnifyingglass")
                     }
                     Button {
                         app.ble.stopScan()
@@ -41,7 +41,7 @@ struct DeviceView: View {
 
                 Section("发现的设备") {
                     if app.ble.devices.isEmpty {
-                        Text("没有发现设备。请确认设备已开机并靠近 iPhone。")
+                        Text("没有发现 BLE 广播。请确认设备已开机、靠近 iPhone，并先退出安卓端连接。")
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(app.ble.devices) { device in
@@ -50,9 +50,19 @@ struct DeviceView: View {
                             } label: {
                                 HStack {
                                     VStack(alignment: .leading) {
-                                        Text(device.name)
-                                            .foregroundStyle(.primary)
-                                        Text("RSSI \(device.rssi)")
+                                        HStack(spacing: 6) {
+                                            Text(device.name)
+                                                .foregroundStyle(.primary)
+                                            if device.isLikelySensorBall {
+                                                Text("SENBALL")
+                                                    .font(.caption2.weight(.bold))
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(Capsule().fill(Color.orange.opacity(0.18)))
+                                                    .foregroundStyle(.orange)
+                                            }
+                                        }
+                                        Text("\(device.detail) | RSSI \(device.rssi)")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
