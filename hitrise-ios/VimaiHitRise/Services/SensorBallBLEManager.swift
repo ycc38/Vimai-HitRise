@@ -8,6 +8,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     @Published private(set) var connectedDevice: SensorBallDeviceInfo?
     @Published private(set) var latestTelemetry: SensorBallTelemetry?
     @Published var statusMessage: String = "蓝牙未初始化"
+    @Published private(set) var lastScanDebugText: String = ""
 
     private var central: CBCentralManager!
     private var peripherals: [UUID: CBPeripheral] = [:]
@@ -18,7 +19,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        central = CBCentralManager(delegate: self, queue: .main)
+        central = CBCentralManager(delegate: self, queue: nil)
     }
 
     var isReadyForCounting: Bool {
@@ -32,6 +33,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         }
         devices.removeAll()
         peripherals.removeAll()
+        lastScanDebugText = ""
         central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
         statusMessage = "正在扫描附近 BLE 设备..."
     }
@@ -276,17 +278,10 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     }
 
     private static func hasCompatibleSerialAdvertisement(_ advertisementData: [String: Any]) -> Bool {
-        let uuidCollections = [
-            advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
-            advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID],
-            advertisementData[CBAdvertisementDataSolicitedServiceUUIDsKey] as? [CBUUID]
-        ]
-        if uuidCollections.compactMap({ $0 }).flatMap({ $0 }).contains(where: { isCompatibleSerialUUID($0) }) {
-            return true
-        }
+        let uuids = advertisedServiceUUIDObjects(from: advertisementData)
+        if uuids.contains(where: { isCompatibleSerialUUID($0) }) { return true }
         if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] {
-            return serviceData.keys.contains(where: { isCompatibleSerialUUID($0) }) ||
-                serviceData.values.contains(where: { extractBoxingName(from: $0) != nil })
+            return serviceData.values.contains(where: { extractBoxingName(from: $0) != nil })
         }
         return false
     }
@@ -308,6 +303,10 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     }
 
     private static func advertisedServiceUUIDs(from advertisementData: [String: Any]) -> [String] {
+        advertisedServiceUUIDObjects(from: advertisementData).map(\.uuidString)
+    }
+
+    private static func advertisedServiceUUIDObjects(from advertisementData: [String: Any]) -> [CBUUID] {
         var uuids: [CBUUID] = []
         if let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] {
             uuids.append(contentsOf: serviceUUIDs)
@@ -321,12 +320,17 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] {
             uuids.append(contentsOf: serviceData.keys)
         }
-        return uuids.map(\.uuidString)
+        return uuids
     }
 
     private static func isCompatibleSerialUUID(_ uuid: CBUUID) -> Bool {
-        let text = uuid.uuidString.lowercased()
-        return text.contains("ffe0") || text.contains("ffe1") || text.contains("ffe4") || text.contains("ffe5") || text.contains("ffe9")
+        let text = uuid.uuidString.uppercased()
+        return Constants.sensorBallServiceUUIDs.contains(text) ||
+            text.contains("FFE0") ||
+            text.contains("FFE1") ||
+            text.contains("FFE4") ||
+            text.contains("FFE5") ||
+            text.contains("FFE9")
     }
 
     private static func fallbackDisplayName(for peripheral: CBPeripheral) -> String {
@@ -335,6 +339,8 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
 
     private enum Constants {
         static let deviceBrand = "SENBALL"
+        static let devicePrefix = "SENBALL#"
+        static let sensorBallServiceUUIDs = ["FFE0", "0000FFE0-0000-1000-8000-00805F9B34FB"]
         static let telemetryPacketSize = 11
         static let sensorForceScale = 0.6
     }
@@ -363,6 +369,12 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        let names = SensorBallBLEManager.nameCandidates(from: advertisementData, peripheralName: peripheral.name)
+        let name = names.first ?? "N/A"
+        let serviceText = SensorBallBLEManager
+            .advertisedServiceUUIDs(from: advertisementData)
+            .joined(separator: ",")
+        lastScanDebugText = "最近广播：\(name)，服务：\(serviceText.isEmpty ? "N/A" : serviceText)，RSSI \(RSSI.intValue)"
         addOrUpdate(peripheral: peripheral, rssi: RSSI, advertisementData: advertisementData)
     }
 

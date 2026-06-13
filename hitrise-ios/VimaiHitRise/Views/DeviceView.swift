@@ -39,6 +39,14 @@ struct DeviceView: View {
                     }
                 }
 
+                if !app.ble.lastScanDebugText.isEmpty {
+                    Section("扫描诊断") {
+                        Text(app.ble.lastScanDebugText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section("发现的设备") {
                     if app.ble.devices.isEmpty {
                         Text("没有发现 BLE 广播。请确认设备已开机、靠近 iPhone，并先退出安卓端连接。")
