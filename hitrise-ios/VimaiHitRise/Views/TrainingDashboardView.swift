@@ -67,14 +67,31 @@ struct TrainingDashboardView: View {
                 }
             }
             .background {
-                Image("training_center_watermark")
-                    .resizable()
-                    .scaledToFill()
-                    .opacity(0.16)
-                    .clipped()
+                trainingWatermark(palette)
             }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
+    }
+
+    private func trainingWatermark(_ palette: HitRisePalette) -> some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(hex: palette.accent).opacity(0.18), Color.clear],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            VStack(spacing: 2) {
+                Image(systemName: "figure.boxing")
+                    .font(.system(size: 76, weight: .black))
+                Text("HITRISE")
+                    .font(.system(size: 34, weight: .black, design: .rounded))
+            }
+            .foregroundStyle(Color(hex: palette.accentHot).opacity(0.11))
+            .rotationEffect(.degrees(-12))
+            .offset(x: 74, y: -18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        }
+        .clipped()
     }
 
     private func playModeGrid(_ palette: HitRisePalette) -> some View {
