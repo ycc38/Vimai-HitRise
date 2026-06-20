@@ -130,7 +130,7 @@ struct HitRiseHeader: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Vimai HitRise")
+                Text("智能拳击速度球")
                     .font(.system(size: 22, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: palette.textPrimary))
                 HStack(spacing: 8) {

@@ -178,7 +178,7 @@ struct HitRiseSettingsView: View {
 
     private func appPanel(_ palette: HitRisePalette) -> some View {
         HitRiseCard(palette: palette) {
-            HitRiseSectionTitle(title: "应用信息", subtitle: "Vimai HitRise | com.zclei.hitrise", palette: palette)
+            HitRiseSectionTitle(title: "应用信息", subtitle: "智能拳击速度球 | com.zclei.hitrise", palette: palette)
             Text(app.config.apiBaseURL.absoluteString)
                 .font(.caption.monospaced())
                 .foregroundStyle(Color(hex: palette.warning))

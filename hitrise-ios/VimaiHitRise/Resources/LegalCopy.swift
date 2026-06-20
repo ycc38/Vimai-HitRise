@@ -2,7 +2,7 @@ import Foundation
 
 enum LegalCopy {
     static let privacySummary = """
-    Vimai HitRise 会在本机生成一个匿名设备资料，用于同步训练记录、排行榜和统计信息。
+    智能拳击速度球会在本机生成一个匿名设备资料，用于同步训练记录、排行榜和统计信息。
 
     App 会请求蓝牙权限以连接立式拳击速度球，并接收拳数、力度、电量等训练数据。App 不接入通讯录、定位、相机、麦克风或 HealthKit。
 
@@ -10,7 +10,7 @@ enum LegalCopy {
     """
 
     static let userAgreementSummary = """
-    Vimai HitRise 是立式拳击速度球配套训练 App。训练结果仅供运动参考，不构成医疗建议。
+    智能拳击速度球是立式拳击速度球配套训练 App。训练结果仅供运动参考，不构成医疗建议。
 
     使用时请确保设备安装稳固、周围空间安全，并根据自身身体状态调整训练强度。
 

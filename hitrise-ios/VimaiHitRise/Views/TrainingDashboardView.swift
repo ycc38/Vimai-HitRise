@@ -289,7 +289,7 @@ struct TrainingDashboardView: View {
     }
 
     private func shareText(_ report: TrainingReport) -> String {
-        "Vimai HitRise 训练战报：\(report.totalHits) 拳，峰值 \(Int(report.peakForceN)) N，消耗 \(String(format: "%.1f", report.caloriesBurned)) kcal。"
+        "智能拳击速度球训练战报：\(report.totalHits) 拳，峰值 \(Int(report.peakForceN)) N，消耗 \(String(format: "%.1f", report.caloriesBurned)) kcal。"
     }
 }
 

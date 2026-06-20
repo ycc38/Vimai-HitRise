@@ -1,6 +1,6 @@
 workflows:
   ios-simulator-build:
-    name: Vimai HitRise iOS Simulator Build
+    name: 智能拳击速度球 iOS Simulator Build
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
@@ -41,7 +41,7 @@ workflows:
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
   ios-app-store-ipa:
-    name: Vimai HitRise Signed IPA
+    name: 智能拳击速度球 Signed IPA
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
