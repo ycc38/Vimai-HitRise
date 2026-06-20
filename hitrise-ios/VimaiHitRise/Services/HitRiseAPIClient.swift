@@ -22,6 +22,24 @@ final class HitRiseAPIClient {
         )
     }
 
+    func updateProfile(
+        state: ActivationState,
+        nickname: String,
+        languageCode: String,
+        avatarColor: String?
+    ) async throws -> CloudBootstrapResponse {
+        try await post(
+            path: "/api/v1/user/profile/update",
+            payload: ProfileUpdatePayload(
+                state: state,
+                appVersion: config.appVersion,
+                nickname: nickname,
+                languageCode: languageCode,
+                avatarColor: avatarColor
+            )
+        )
+    }
+
     func uploadTrainingSession(state: ActivationState, report: TrainingReport) async throws -> CloudSessionUploadResponse {
         let payload = TrainingSessionPayload(
             state: state,
@@ -144,6 +162,28 @@ private struct AuthPayload: Encodable {
     }
 }
 
+private struct ProfileUpdatePayload: Encodable {
+    let serial: String
+    let activationToken: String
+    let installId: String
+    let deviceHash: String
+    let appVersion: String
+    let nickname: String
+    let languageCode: String
+    let avatarColor: String?
+
+    init(state: ActivationState, appVersion: String, nickname: String, languageCode: String, avatarColor: String?) {
+        serial = state.serial
+        activationToken = state.activationToken
+        installId = state.installId
+        deviceHash = state.deviceHash
+        self.appVersion = appVersion
+        self.nickname = nickname
+        self.languageCode = languageCode
+        self.avatarColor = avatarColor
+    }
+}
+
 private struct HistoryPayload: Encodable {
     let serial: String
     let activationToken: String
@@ -227,14 +267,42 @@ private struct TrainingSessionPayload: Encodable {
         avgBpm = report.avgBpm
         peakForceN = report.peakForceN
         avgForceN = report.avgForceN
-        rhythmAccuracy = 0
-        comboSummaryJson = "{}"
-        beatScoreCountsJson = #"{"perfect":0,"good":0,"miss":0}"#
-        roundConfigJson = nil
+        rhythmAccuracy = report.rhythmAccuracy
+        comboSummaryJson = Self.makeJsonObject(report.comboSummary)
+        beatScoreCountsJson = Self.makeJsonObject([
+            "perfect": report.rhythmSummary.perfectCount,
+            "good": report.rhythmSummary.goodCount,
+            "miss": report.rhythmSummary.missCount
+        ])
+        roundConfigJson = Self.makeRoundConfigJson(report.roundConfig)
         roundReportsJson = Self.makeRoundReportsJson(report.roundReports)
         playMode = report.playMode
         soundPackId = report.soundPackId
         endedAtEpochMs = report.endedAtEpochMs
+    }
+
+    private static func makeJsonObject(_ values: [String: Int]) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: values),
+              let text = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return text
+    }
+
+    private static func makeRoundConfigJson(_ config: RoundConfig?) -> String? {
+        guard let config else { return nil }
+        let payload: [String: Any] = [
+            "id": config.id,
+            "label": config.label,
+            "work_seconds": config.workSeconds,
+            "rest_seconds": config.restSeconds,
+            "rounds": config.rounds
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let text = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return text
     }
 
     private static func makeRoundReportsJson(_ rounds: [TrainingRoundReport]) -> String {

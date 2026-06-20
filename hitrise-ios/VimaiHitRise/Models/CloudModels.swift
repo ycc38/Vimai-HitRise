@@ -46,6 +46,119 @@ struct CloudUserStatistics: Codable {
     let totalFatBurnedGrams: Double
     let bestPeakForceN: Double
     let bestAvgForceN: Double
+    let totalRounds: Int?
+    let bestRoundHits: Int?
+    let averageRoundHits: Double?
+    let bestRoundPeakForceN: Double?
+    let bestRoundAvgForceN: Double?
+    let averageRoundCaloriesBurned: Double?
+}
+
+struct CloudTierProgress: Codable {
+    let level: Int
+    let key: String
+    let bestHits: Int
+    let nextLevel: Int?
+    let nextKey: String?
+    let nextHits: Int?
+    let progressHits: Int
+    let progressTargetHits: Int
+
+    var progressFraction: Double {
+        guard progressTargetHits > 0 else { return 1 }
+        return min(1, max(0, Double(progressHits) / Double(progressTargetHits)))
+    }
+
+    init(
+        level: Int,
+        key: String,
+        bestHits: Int,
+        nextLevel: Int?,
+        nextKey: String?,
+        nextHits: Int?,
+        progressHits: Int,
+        progressTargetHits: Int
+    ) {
+        self.level = level
+        self.key = key
+        self.bestHits = bestHits
+        self.nextLevel = nextLevel
+        self.nextKey = nextKey
+        self.nextHits = nextHits
+        self.progressHits = progressHits
+        self.progressTargetHits = progressTargetHits
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        level = container.decodeIntIfPresent(forKey: .level, default: 1)
+        key = container.decodeStringIfPresent(forKey: .key, default: "rookie")
+        bestHits = container.decodeIntIfPresent(forKey: .bestHits, default: 0)
+        nextLevel = try container.decodeIfPresent(Int.self, forKey: .nextLevel)
+        nextKey = try container.decodeIfPresent(String.self, forKey: .nextKey)
+        nextHits = try container.decodeIfPresent(Int.self, forKey: .nextHits)
+        progressHits = container.decodeIntIfPresent(forKey: .progressHits, default: bestHits)
+        progressTargetHits = container.decodeIntIfPresent(forKey: .progressTargetHits, default: nextHits ?? max(bestHits, 1))
+    }
+}
+
+struct CloudAchievementItem: Codable, Identifiable {
+    var id: String { key }
+    let key: String
+    let metric: String
+    let goal: Int
+    let progress: Int
+    let unlocked: Bool
+    let unlockedAt: String?
+    let sortOrder: Int
+
+    var progressFraction: Double {
+        guard goal > 0 else { return unlocked ? 1 : 0 }
+        return min(1, max(0, Double(progress) / Double(goal)))
+    }
+
+    init(
+        key: String,
+        metric: String,
+        goal: Int,
+        progress: Int,
+        unlocked: Bool,
+        unlockedAt: String?,
+        sortOrder: Int
+    ) {
+        self.key = key
+        self.metric = metric
+        self.goal = goal
+        self.progress = progress
+        self.unlocked = unlocked
+        self.unlockedAt = unlockedAt
+        self.sortOrder = sortOrder
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        key = container.decodeStringIfPresent(forKey: .key, default: UUID().uuidString)
+        metric = container.decodeStringIfPresent(forKey: .metric, default: "total_hits")
+        goal = container.decodeIntIfPresent(forKey: .goal, default: 0)
+        progress = container.decodeIntIfPresent(forKey: .progress, default: 0)
+        unlocked = container.decodeBoolIfPresent(forKey: .unlocked, default: false)
+        unlockedAt = try container.decodeIfPresent(String.self, forKey: .unlockedAt)
+        sortOrder = container.decodeIntIfPresent(forKey: .sortOrder, default: 0)
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeStringIfPresent(forKey key: Key, default defaultValue: String) -> String {
+        (try? decodeIfPresent(String.self, forKey: key)) ?? defaultValue
+    }
+
+    func decodeIntIfPresent(forKey key: Key, default defaultValue: Int) -> Int {
+        (try? decodeIfPresent(Int.self, forKey: key)) ?? defaultValue
+    }
+
+    func decodeBoolIfPresent(forKey key: Key, default defaultValue: Bool) -> Bool {
+        (try? decodeIfPresent(Bool.self, forKey: key)) ?? defaultValue
+    }
 }
 
 struct CloudRoundReportItem: Codable, Identifiable {
@@ -115,6 +228,9 @@ struct CloudBootstrapResponse: Codable {
     let profile: CloudUserProfile?
     let statistics: CloudUserStatistics?
     let history: [CloudTrainingHistoryItem]?
+    let achievements: [CloudAchievementItem]?
+    let tier: CloudTierProgress?
+    let promoted: Bool?
 }
 
 struct CloudSessionUploadResponse: Codable {
@@ -125,6 +241,9 @@ struct CloudSessionUploadResponse: Codable {
     let profile: CloudUserProfile?
     let statistics: CloudUserStatistics?
     let history: [CloudTrainingHistoryItem]?
+    let achievements: [CloudAchievementItem]?
+    let tier: CloudTierProgress?
+    let promoted: Bool?
 }
 
 struct CloudLeaderboardResponse: Codable {
@@ -138,7 +257,7 @@ struct CloudLeaderboardResponse: Codable {
     let me: CloudLeaderboardEntry?
 }
 
-struct CloudSoundAsset: Codable, Identifiable {
+struct CloudSoundAsset: Codable, Identifiable, Equatable {
     let id: String
     let nameZh: String
     let nameEn: String
@@ -148,6 +267,9 @@ struct CloudSoundAsset: Codable, Identifiable {
     let bpm: Int
     let durationMs: Int
     let url: URL
+
+    var displayName: String { nameZh.isEmpty ? nameEn : nameZh }
+    var displayDescription: String { descriptionZh.isEmpty ? descriptionEn : descriptionZh }
 }
 
 struct CloudSoundCatalog: Codable {
