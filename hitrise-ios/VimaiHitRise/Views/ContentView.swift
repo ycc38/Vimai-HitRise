@@ -59,10 +59,10 @@ enum HitRiseHomePage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .training: return "训练"
-        case .achievements: return "成就"
-        case .leaderboard: return "排行"
-        case .profile: return "我的"
+        case .training: return "训练中心"
+        case .achievements: return "锻炼成果"
+        case .leaderboard: return "榜单排名"
+        case .profile: return "个人中心"
         }
     }
 
@@ -102,9 +102,6 @@ struct ContentView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HitRiseHeader(selectedPage: selectedPage, palette: palette) {
-                    showingSettings = true
-                }
                 pageHost
                 HitRiseBottomNav(selectedPage: $selectedPage, palette: palette)
                     .padding(.horizontal, 14)
@@ -135,7 +132,9 @@ struct ContentView: View {
     private var pageHost: some View {
         switch selectedPage {
         case .training:
-            TrainingDashboardView()
+            TrainingDashboardView(onSettings: {
+                showingSettings = true
+            })
         case .achievements:
             AchievementsHistoryView()
         case .leaderboard:
@@ -293,6 +292,7 @@ struct HitRiseBottomNav: View {
                         Text(page.title)
                             .font(.caption2.weight(.bold))
                             .lineLimit(1)
+                            .minimumScaleFactor(0.78)
                     }
                     .foregroundStyle(selectedPage == page ? Color(hex: "#09A99A") : Color(hex: "#6B7C80"))
                     .frame(maxWidth: .infinity)

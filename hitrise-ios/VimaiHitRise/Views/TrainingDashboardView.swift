@@ -4,6 +4,7 @@ import SwiftUI
 struct TrainingDashboardView: View {
     @EnvironmentObject private var app: AppViewModel
     @State private var showingTrainingSettings = false
+    var onSettings: (() -> Void)? = nil
 
     var body: some View {
         let palette = app.palette
@@ -14,10 +15,10 @@ struct TrainingDashboardView: View {
                 homeForceCard(palette)
                 homeConnectionReportCard(palette)
                 homeGoalAchievementCard(palette)
-                aiCoachCard(palette)
                 latestReportCard(palette)
             }
             .padding(.horizontal, 14)
+            .padding(.top, 12)
             .padding(.bottom, 20)
         }
         .scrollIndicators(.hidden)
@@ -28,47 +29,43 @@ struct TrainingDashboardView: View {
     }
 
     private func trainingControlPanel(_ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette, stroke: palette.strokeStrong, fill: palette.card, padding: 12) {
-            VStack(spacing: 14) {
-                HStack {
-                    HitRiseSectionTitle(title: "训练中心", subtitle: statusLine, palette: palette)
+        HitRiseCard(palette: palette, stroke: "#D6F2EC", fill: "#FFFFFF", padding: 14) {
+            VStack(spacing: 16) {
+                HStack(spacing: 10) {
+                    Text("实时训练")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(Color(hex: "#17343B"))
+                    Spacer(minLength: 8)
+                    HitRiseBadge(
+                        text: "第 \(app.training.currentRound) / \(app.training.totalRounds) 回合",
+                        palette: palette,
+                        fill: "#E4FFF9",
+                        textColor: "#0A9D90"
+                    )
                     Button {
                         showingTrainingSettings = true
                     } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(Color(hex: palette.accentHot))
-                            .frame(width: 42, height: 42)
-                            .background(Circle().fill(Color(hex: palette.cardAlt)))
+                        Label("训练设置", systemImage: "gearshape")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundStyle(Color(hex: "#17343B"))
+                            .lineLimit(1)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(Color(hex: "#F5FFFC")))
+                            .overlay(Capsule().stroke(Color(hex: "#D6F2EC"), lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
-                playModeGrid(palette)
+
                 timerAndCount(palette)
                 realtimeDashboard(palette)
-                HStack(spacing: 12) {
-                    HomeImageActionButton(
-                        title: "开始训练",
-                        assetName: "home_btn_start",
-                        palette: palette,
-                        disabled: !app.training.canStart
-                    ) {
-                        app.startTraining()
-                    }
-                    HomeImageActionButton(
-                        title: "停止保存",
-                        assetName: "home_btn_stop",
-                        palette: palette,
-                        disabled: app.training.canStart
-                    ) {
-                        app.stopTraining()
-                    }
-                }
+                trainingProgressRow(palette)
+                comboRecognitionRow(palette)
             }
             .background {
                 trainingWatermark(palette)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
     }
 
@@ -132,7 +129,11 @@ struct TrainingDashboardView: View {
             .padding(.top, 24)
 
             Button {
-                showingTrainingSettings = true
+                if let onSettings {
+                    onSettings()
+                } else {
+                    showingTrainingSettings = true
+                }
             } label: {
                 Image("home_icon_settings")
                     .resizable()
@@ -197,45 +198,106 @@ struct TrainingDashboardView: View {
     }
 
     private func timerAndCount(_ palette: HitRisePalette) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 10) {
+            roundActionButton(
+                title: "开始",
+                fill: "#20C8BA",
+                disabled: !app.training.canStart
+            ) {
+                app.startTraining()
+            }
+
             ZStack {
-                Image("home_timer_bg")
-                    .resizable()
-                    .scaledToFill()
-                    .opacity(palette.isLight ? 0.52 : 0.25)
-                    .clipShape(Circle())
+                Circle()
+                    .fill(Color(hex: "#F8FFFD"))
+                    .shadow(color: Color(hex: "#91E6D9").opacity(0.20), radius: 12, x: 0, y: 6)
                 CircularTimerRing(
                     progress: app.training.progressFraction,
                     center: timeText,
-                    caption: phaseCaption,
+                    caption: "回合时间",
                     palette: palette
                 )
-                .padding(10)
+                .padding(9)
             }
-            .frame(width: 138, height: 138)
+            .frame(width: 126, height: 126)
 
-            VStack(alignment: .leading, spacing: 6) {
-                HitRiseBadge(text: "第 \(app.training.currentRound)/\(app.training.totalRounds) 回合", palette: palette)
-                Text("\(app.training.totalHits)")
-                    .font(.system(size: 74, weight: .black, design: .rounded))
-                    .foregroundStyle(Color(hex: palette.textPrimary))
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                Text("累计击拳数")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: palette.textSecondary))
+            roundActionButton(
+                title: "结束",
+                fill: "#F6B986",
+                disabled: app.training.canStart
+            ) {
+                app.stopTraining()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private func realtimeDashboard(_ palette: HitRisePalette) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-            HomeMetricTile(iconName: "home_metric_hits", title: "累计拳数", value: "\(app.training.totalHits)", unit: "拳", palette: palette, accent: palette.accent)
-            HomeMetricTile(iconName: "home_metric_bpm", title: "节奏准确", value: "\(Int(app.training.rhythmSummary.accuracy * 100))", unit: "%", palette: palette, accent: palette.accentHot)
-            HomeMetricTile(iconName: "home_metric_calories", title: "最新力度", value: "\(Int(app.training.latestForceN))", unit: "N", palette: palette, accent: palette.forceMid)
-            HomeMetricTile(iconName: "home_metric_fat", title: "平均力度", value: "\(Int(app.training.averageForceN))", unit: "N", palette: palette, accent: palette.forceLow)
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+            HomeMetricTile(iconName: "home_metric_hits", title: "拳数", value: reportHitsText, unit: "次", palette: palette, accent: "#17343B")
+            HomeMetricTile(iconName: "home_metric_bpm", title: "BPM", value: bpmText, unit: "", palette: palette, accent: "#17343B")
+            HomeMetricTile(iconName: "home_metric_calories", title: "卡路里", value: caloriesText, unit: "kcal", palette: palette, accent: "#17343B")
+            HomeMetricTile(iconName: "home_metric_fat", title: "等效燃脂", value: fatText, unit: "g", palette: palette, accent: "#17343B")
         }
+    }
+
+    private func trainingProgressRow(_ palette: HitRisePalette) -> some View {
+        HStack(spacing: 8) {
+            Text("今日目标:")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Color(hex: "#557A7D"))
+            Text("\(activeTargetHits) 拳")
+                .font(.caption.weight(.black))
+                .foregroundStyle(Color(hex: "#17343B"))
+            Text("| 已完成 \(activeCompletedHits) 拳")
+                .font(.caption.weight(.black))
+                .foregroundStyle(Color(hex: "#17343B"))
+            MiniProgressBar(progress: min(1, Double(activeCompletedHits) / Double(max(activeTargetHits, 1))))
+                .frame(width: 104, height: 8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func comboRecognitionRow(_ palette: HitRisePalette) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("连击识别")
+                .font(.caption.weight(.black))
+                .foregroundStyle(Color(hex: "#17343B"))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 7) {
+                    comboPill("重击", "\(comboValue("heavy_hit"))", fill: "#F5FFFC", stroke: "#CDEFE8", text: "#557A7D")
+                    comboPill("速击", "\(comboValue("fast_combo"))", fill: "#DFFFF7", stroke: "#BCEFE6", text: "#0B9F91")
+                    comboPill("三连击", nil, fill: "#F5FFFC", stroke: "#CDEFE8", text: "#557A7D")
+                    comboPill("爆发连击", "\(app.training.latestReport?.bestBurstCount ?? app.training.comboSummary["sixteen_chain"] ?? 0)", fill: "#FF784B", stroke: "#FF784B", text: "#FFFFFF")
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func comboPill(_ title: String, _ value: String?, fill: String, stroke: String, text: String) -> some View {
+        Text(value == nil ? title : "\(title) ×\(value ?? "0")")
+            .font(.system(size: 11, weight: .black))
+            .foregroundStyle(Color(hex: text))
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(Color(hex: fill)))
+            .overlay(Capsule().stroke(Color(hex: stroke), lineWidth: 1))
+    }
+
+    private func roundActionButton(title: String, fill: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.headline.weight(.black))
+                .foregroundStyle(Color.white)
+                .frame(width: 64, height: 48)
+                .background(Capsule().fill(Color(hex: fill)))
+                .shadow(color: Color(hex: fill).opacity(0.22), radius: 8, x: 0, y: 4)
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .opacity(disabled ? 0.55 : 1)
     }
 
     private func homeForceCard(_ palette: HitRisePalette) -> some View {
@@ -396,42 +458,159 @@ struct TrainingDashboardView: View {
 
     @ViewBuilder
     private func latestReportCard(_ palette: HitRisePalette) -> some View {
-        HitRiseSectionTitle(title: "最新报告", subtitle: "训练结束后自动上传云端", palette: palette)
+        HitRiseSectionTitle(title: "回合训练战报", subtitle: nil, palette: palette)
         if let report = app.training.latestReport {
-            HitRiseCard(palette: palette) {
+            HitRiseCard(palette: palette, stroke: "#CDEFE8", fill: "#FFFFFF", padding: 16) {
                 HStack {
-                    HitRiseBadge(text: "训练战报", palette: palette, fill: palette.accentHot)
+                    HitRiseBadge(
+                        text: "第 \(max(report.completedRounds, 1))/\(max(report.totalRounds, 1)) 回合",
+                        palette: palette,
+                        fill: "#E4FFF9",
+                        textColor: "#0A9D90"
+                    )
                     Spacer()
-                    ShareLink(item: shareText(report)) {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundStyle(Color(hex: palette.accentHot))
+                    HitRiseBadge(text: "\(report.totalHits) 次", palette: palette, fill: "#FF9B42", textColor: "#FFFFFF")
+                }
+
+                VStack(spacing: 6) {
+                    Text("第 \(max(report.completedRounds, 1)) 回合训练战报")
+                        .font(.title3.weight(.black))
+                        .foregroundStyle(Color(hex: "#17343B"))
+                    Text("累计锻炼 \(durationText(report.durationSeconds)) | 累计 \(report.totalHits) 拳 | \(String(format: "%.1f", report.caloriesBurned)) kcal | 等效燃脂 \(String(format: "%.1f", report.fatBurnedGrams)) g")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "#557A7D"))
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    reportMetric("累计锻炼时间", durationText(report.durationSeconds), "#22C8BA")
+                    reportMetric("累计击拳数", "\(report.totalHits) 次", "#22C8BA")
+                    reportMetric("最大力度", forceText(report.peakForceN), "#E85E58")
+                    reportMetric("平均力度", forceText(report.avgForceN), "#22C8BA")
+                    reportMetric("消耗卡路里", "\(String(format: "%.1f", report.caloriesBurned)) kcal", "#78D98D")
+                    reportMetric("等效燃脂", "\(String(format: "%.1f", report.fatBurnedGrams)) g", "#E5C859")
+                    reportMetric("平均 BPM", "\(Int(report.avgBpm.rounded()))", "#56BFEA")
+                    reportMetric("最佳连击", "\(report.bestBurstCount) 次", "#E5C859")
+                }
+
+                if !report.roundReports.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("回合累计战报")
+                            .font(.caption.weight(.black))
+                            .foregroundStyle(Color(hex: "#17343B"))
+                        ForEach(report.roundReports.prefix(4)) { round in
+                            Text("第 \(round.roundIndex) 回合：累计 \(durationText(round.durationSeconds)) | \(round.totalHits) 拳 | \(String(format: "%.1f", round.caloriesBurned)) kcal | 等效燃脂 \(String(format: "%.1f", round.fatBurnedGrams)) g")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(Color(hex: "#557A7D"))
+                        }
                     }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(hex: "#F5FFFC")))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(hex: "#D6F2EC"), lineWidth: 1))
                 }
-                HStack {
-                    HitRiseMetricTile(title: "拳数", value: "\(report.totalHits)", unit: "hits", palette: palette, accent: palette.accentHot)
-                    HitRiseMetricTile(title: "热量", value: String(format: "%.1f", report.caloriesBurned), unit: "kcal", palette: palette, accent: palette.warning)
+
+                Text("训练已记录，今天的节奏又往前推进了一步。连续训练 \(app.trainingStreak) 天，XP +10。")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color(hex: "#855F12"))
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(hex: "#FFF8E4")))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(hex: "#F4D48A"), lineWidth: 1))
+
+                ShareLink(item: shareText(report)) {
+                    Text("分享战报")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(Color.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Capsule().fill(Color(hex: "#22C8BA")))
                 }
-                HStack {
-                    Text("峰值 \(Int(report.peakForceN)) N | 平均 \(Int(report.avgForceN)) N")
-                    Spacer()
-                    Text("频率 \(String(format: "%.2f", report.averageFrequency))/s")
-                }
-                .font(.caption.weight(.bold))
-                .foregroundStyle(Color(hex: palette.textSecondary))
+                .buttonStyle(.plain)
             }
         } else {
-            HitRiseCard(palette: palette) {
+            HitRiseCard(palette: palette, stroke: "#CDEFE8", fill: "#FFFFFF") {
                 Text("暂无训练报告。连接设备后开始一组训练。")
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color(hex: palette.textMuted))
             }
         }
     }
 
+    private func reportMetric(_ title: String, _ value: String, _ stroke: String) -> some View {
+        VStack(spacing: 7) {
+            Text(title)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(Color(hex: "#557A7D"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(value)
+                .font(.headline.weight(.black))
+                .foregroundStyle(Color(hex: "#17343B"))
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(Color.white))
+        .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).stroke(Color(hex: stroke).opacity(0.78), lineWidth: 1.2))
+    }
     private var statusLine: String {
         if let device = app.ble.connectedDevice {
             return "已连接 \(device.name) | \(app.ble.statusMessage)"
         }
         return "请先连接立式拳击速度球"
+    }
+
+    private var activeCompletedHits: Int {
+        if app.training.totalHits > 0 || !app.training.canStart {
+            return app.training.totalHits
+        }
+        return app.training.latestReport?.totalHits ?? 0
+    }
+
+    private var activeTargetHits: Int {
+        switch app.training.selectedPlayMode {
+        case .levelChallenge:
+            return app.levelTargetHits()
+        case .dailyChallenge:
+            return app.dailyTargetHits()
+        default:
+            return 500
+        }
+    }
+
+    private var bpmText: String {
+        if app.training.totalHits > 0 {
+            let plannedSeconds = max(1, app.training.selectedSetup.workMinutes * 60)
+            let elapsedSeconds = max(1, plannedSeconds - app.training.remainingSeconds)
+            let liveBpm = Int((Double(app.training.totalHits) / Double(elapsedSeconds) * 60).rounded())
+            return "\(max(liveBpm, app.training.selectedSetup.bpm))"
+        }
+        if let report = app.training.latestReport, report.avgBpm > 0 {
+            return "\(Int(report.avgBpm.rounded()))"
+        }
+        return "\(app.training.selectedSetup.bpm)"
+    }
+
+    private var caloriesText: String {
+        String(format: "%.1f", activeCalories)
+    }
+
+    private var fatText: String {
+        String(format: "%.1f", activeCalories / 7.7)
+    }
+
+    private var activeCalories: Double {
+        if app.training.totalHits > 0 || !app.training.canStart {
+            let forceFactor = max(0.7, min(1.5, max(app.training.averageForceN, 260) / 420))
+            return Double(max(app.training.totalHits, 0)) * 0.063 * forceFactor
+        }
+        return app.training.latestReport?.caloriesBurned ?? 0
+    }
+
+    private func comboValue(_ key: String) -> Int {
+        app.training.comboSummary[key] ?? app.training.latestReport?.comboSummary[key] ?? 0
     }
 
     private var phaseCaption: String {
@@ -581,35 +760,57 @@ struct HomeMetricTile: View {
     var accent: String?
 
     var body: some View {
-        HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 7) {
             Image(iconName)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 30, height: 30)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(Color(hex: palette.textMuted))
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(value)
-                        .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundStyle(Color(hex: accent ?? palette.textPrimary))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.65)
+                .frame(width: 22, height: 22)
+            Text(title)
+                .font(.system(size: 10, weight: .black))
+                .foregroundStyle(Color(hex: palette.textMuted))
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(hex: accent ?? palette.textPrimary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
+                if !unit.isEmpty {
                     Text(unit)
-                        .font(.caption2.weight(.bold))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(Color(hex: palette.textMuted))
+                        .lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 98, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(hex: palette.cardAlt))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color(hex: palette.stroke), lineWidth: 1))
+                .fill(Color.white)
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color(hex: "#E0F3EF"), lineWidth: 1))
+                .shadow(color: Color(hex: "#8FE5D8").opacity(0.08), radius: 6, x: 0, y: 3)
         )
+    }
+}
+
+struct MiniProgressBar: View {
+    let progress: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color(hex: "#D7F7F1"))
+                Capsule()
+                    .fill(Color(hex: "#22C8BA"))
+                    .frame(width: max(8, width * min(1, max(0, progress))))
+            }
+        }
     }
 }
 
@@ -622,18 +823,22 @@ struct CircularTimerRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color(hex: palette.cardAlt), lineWidth: 11)
+                .stroke(Color(hex: "#DDF8F3"), lineWidth: 10)
             Circle()
                 .trim(from: 0, to: min(1, max(0, progress)))
-                .stroke(Color(hex: palette.accentHot), style: StrokeStyle(lineWidth: 11, lineCap: .round))
+                .stroke(Color(hex: "#23C8BA"), style: StrokeStyle(lineWidth: 10, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+            Circle()
+                .fill(Color(hex: "#F05A4F"))
+                .frame(width: 10, height: 10)
+                .offset(y: -48)
             VStack(spacing: 4) {
                 Text(center)
-                    .font(.system(size: 25, weight: .black, design: .rounded))
-                    .foregroundStyle(Color(hex: palette.accentHot))
+                    .font(.system(size: 27, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(hex: "#E85E58"))
                 Text(caption)
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(Color(hex: palette.textSecondary))
+                    .foregroundStyle(Color(hex: "#8AA3A4"))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
