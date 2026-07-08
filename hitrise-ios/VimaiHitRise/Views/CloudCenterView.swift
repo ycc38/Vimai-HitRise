@@ -27,10 +27,10 @@ struct AchievementsHistoryView: View {
     }
 
     private func tierHero(_ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette, stroke: "#D4B16B", fill: "#0F1820") {
+        HitRiseCard(palette: palette, stroke: palette.isLight ? "#BDEFE6" : "#D4B16B", fill: palette.isLight ? "#FFFFFF" : "#0F1820") {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
-                    HitRiseBadge(text: "TIER \(app.tier?.level ?? app.profile?.currentTier ?? 1)", palette: palette, fill: "#D4B16B")
+                    HitRiseBadge(text: "TIER \(app.tier?.level ?? app.profile?.currentTier ?? 1)", palette: palette, fill: palette.isLight ? "#DFFFF7" : "#D4B16B", textColor: palette.isLight ? "#096D65" : palette.buttonText)
                     Text(tierTitle)
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: palette.textPrimary))
@@ -39,6 +39,12 @@ struct AchievementsHistoryView: View {
                         .foregroundStyle(Color(hex: palette.textSecondary))
                 }
                 Spacer()
+                ShareLink(item: achievementsShareText) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(Color(hex: palette.accentHot))
+                }
+                .buttonStyle(.plain)
                 Button {
                     Task { await app.refreshCloudData() }
                 } label: {
@@ -58,7 +64,19 @@ struct AchievementsHistoryView: View {
 
     private func achievementsGrid(_ palette: HitRisePalette) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HitRiseSectionTitle(title: "训练成就", subtitle: "解锁徽章，记录长期进步", palette: palette)
+            HStack(alignment: .top) {
+                HitRiseSectionTitle(title: "训练成就", subtitle: "解锁徽章，记录长期进步", palette: palette)
+                Spacer()
+                ShareLink(item: achievementsShareText) {
+                    Text("分享荣誉")
+                        .font(.caption.weight(.black))
+                        .foregroundStyle(Color(hex: "#096D65"))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Color(hex: palette.isLight ? "#DFFFF7" : palette.cardAlt)))
+                }
+                .buttonStyle(.plain)
+            }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 ForEach(app.achievements.sorted(by: { $0.sortOrder < $1.sortOrder })) { item in
                     AchievementBadgeCard(item: item, palette: palette)
@@ -105,6 +123,13 @@ struct AchievementsHistoryView: View {
         }
         return "段位进度已完成"
     }
+
+    private var achievementsShareText: String {
+        let tier = app.tier?.level ?? app.profile?.currentTier ?? 1
+        let unlocked = app.achievements.filter { $0.unlocked }.count
+        let totalHits = app.statistics?.totalHits ?? app.history.first?.totalHits ?? 0
+        return "我的智能拳击速度球荣誉：当前 TIER \(tier)，已解锁 \(unlocked) 个成就，累计 \(totalHits) 拳。"
+    }
 }
 
 struct AchievementBadgeCard: View {
@@ -112,7 +137,7 @@ struct AchievementBadgeCard: View {
     let palette: HitRisePalette
 
     var body: some View {
-        HitRiseCard(palette: palette, stroke: item.unlocked ? accent : palette.stroke, fill: item.unlocked ? "#102230" : palette.card, padding: 12) {
+        HitRiseCard(palette: palette, stroke: item.unlocked ? unlockedStroke : palette.stroke, fill: item.unlocked ? unlockedFill : palette.card, padding: 12) {
             HStack(spacing: 10) {
                 ZStack {
                     Circle()
@@ -159,6 +184,14 @@ struct AchievementBadgeCard: View {
         if item.key.contains("duration") { return palette.accent }
         return palette.accentHot
     }
+
+    private var unlockedStroke: String {
+        palette.isLight ? "#BDEFE6" : accent
+    }
+
+    private var unlockedFill: String {
+        palette.isLight ? "#FFFFFF" : "#102230"
+    }
 }
 
 struct HistorySessionCard: View {
@@ -166,7 +199,7 @@ struct HistorySessionCard: View {
     let palette: HitRisePalette
 
     var body: some View {
-        HitRiseCard(palette: palette, stroke: "#20384A", fill: palette.card, padding: 14) {
+        HitRiseCard(palette: palette, stroke: palette.isLight ? "#BDEFE6" : "#20384A", fill: palette.card, padding: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("\(item.totalHits) 拳")
@@ -198,7 +231,19 @@ struct LeaderboardView: View {
         let palette = app.palette
         ScrollView {
             VStack(spacing: 14) {
-                HitRiseSectionTitle(title: "排行榜", subtitle: "查看不同维度的训练排名", palette: palette)
+                HStack(alignment: .top) {
+                    HitRiseSectionTitle(title: "排行榜", subtitle: "查看不同维度的训练排名", palette: palette)
+                    Spacer()
+                    ShareLink(item: leaderboardShareText) {
+                        Text("分享排名")
+                            .font(.caption.weight(.black))
+                            .foregroundStyle(Color(hex: "#096D65"))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(Color(hex: palette.isLight ? "#DFFFF7" : palette.cardAlt)))
+                    }
+                    .buttonStyle(.plain)
+                }
                 boardPicker(palette)
                 podium(palette)
                 if let me = app.leaderboardMe {
@@ -240,7 +285,7 @@ struct LeaderboardView: View {
         let top = Array(app.leaderboard.prefix(3))
         return HStack(alignment: .bottom, spacing: 8) {
             ForEach(top) { entry in
-                HitRiseCard(palette: palette, stroke: podiumAccent(entry.rank, palette), fill: "#0D1924", padding: 12) {
+                HitRiseCard(palette: palette, stroke: podiumAccent(entry.rank, palette), fill: palette.isLight ? "#FFFFFF" : "#0D1924", padding: 12) {
                     Text("#\(entry.rank)")
                         .font(.title2.weight(.black))
                         .foregroundStyle(Color(hex: podiumAccent(entry.rank, palette)))
@@ -264,7 +309,7 @@ struct LeaderboardView: View {
     }
 
     private func leaderboardMe(_ entry: CloudLeaderboardEntry, _ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette, stroke: "#2A5C7B", fill: palette.card) {
+        HitRiseCard(palette: palette, stroke: palette.isLight ? "#BDEFE6" : "#2A5C7B", fill: palette.card) {
             HStack {
                 VStack(alignment: .leading) {
                     Text("我的排名")
@@ -325,6 +370,13 @@ struct LeaderboardView: View {
     private func scoreText(_ entry: CloudLeaderboardEntry) -> String {
         "\(Int(entry.scoreValue))"
     }
+
+    private var leaderboardShareText: String {
+        guard let me = app.leaderboardMe else {
+            return "我正在挑战智能拳击速度球排行榜，来一起训练。"
+        }
+        return "我的智能拳击速度球排名：#\(me.rank) \(me.nickname)，成绩 \(scoreText(me))。"
+    }
 }
 
 struct ProfileView: View {
@@ -352,8 +404,8 @@ struct ProfileView: View {
     }
 
     private func profileHero(_ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette, stroke: "#D9B870", fill: "#2C5B76") {
-            HitRiseBadge(text: "HITRISE ATHLETE", palette: palette, fill: "#FFE8A8")
+        HitRiseCard(palette: palette, stroke: palette.isLight ? "#BDEFE6" : "#D9B870", fill: palette.isLight ? "#FFFFFF" : "#2C5B76") {
+            HitRiseBadge(text: "HITRISE ATHLETE", palette: palette, fill: palette.isLight ? "#DFFFF7" : "#FFE8A8", textColor: palette.isLight ? "#096D65" : palette.buttonText)
             HStack(spacing: 16) {
                 Text(profileInitial)
                     .font(.title.weight(.black))
@@ -362,7 +414,7 @@ struct ProfileView: View {
                     .background(Circle().fill(Color(hex: app.profile?.avatarColor ?? "#CC4400")))
                     .overlay(Circle().stroke(Color(hex: palette.accentHot), lineWidth: 2))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(app.profile?.nickname ?? "HitRise 用户")
+                    Text(app.profile?.nickname ?? "拳击用户")
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: palette.textPrimary))
                     Text(app.profile?.serialMasked ?? app.identity.serial)
@@ -437,7 +489,7 @@ struct EditProfileView: View {
                     }
                     HitRiseActionButton(title: "保存", systemImage: "checkmark", palette: palette, fill: palette.accentHot) {
                         Task {
-                            await app.updateProfile(nickname: nickname.isEmpty ? "HitRise 用户" : nickname, avatarColor: avatarColor)
+                            await app.updateProfile(nickname: nickname.isEmpty ? "拳击用户" : nickname, avatarColor: avatarColor)
                             dismiss()
                         }
                     }
@@ -457,6 +509,6 @@ struct EditProfileView: View {
             nickname = app.profile?.nickname ?? ""
             avatarColor = app.profile?.avatarColor ?? "#CC4400"
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(palette.isLight ? .light : .dark)
     }
 }

@@ -1,0 +1,12 @@
+﻿{
+    "images":  [
+                   {
+                       "filename":  "home_btn_stop.png",
+                       "idiom":  "universal"
+                   }
+               ],
+    "info":  {
+                 "author":  "xcode",
+                 "version":  1
+             }
+}

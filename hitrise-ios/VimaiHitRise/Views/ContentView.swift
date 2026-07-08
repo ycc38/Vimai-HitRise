@@ -31,7 +31,7 @@ struct HitRisePalette: Identifiable, Equatable {
     static let defaultId = "current"
 
     static let all: [HitRisePalette] = [
-        HitRisePalette(id: "current", name: "当前 APP 配色", previewColors: ["#040C08", "#00FF88", "#FFD060"], backgroundTop: "#040C08", backgroundBottom: "#061410", surfaceTop: "#112230", surfaceBottom: "#061410", card: "#0B1721", cardAlt: "#111A22", stroke: "#1A3A24", strokeStrong: "#00FF88", textPrimary: "#FFF8E8", textSecondary: "#DFFFF0", textMuted: "#8EA6B9", accent: "#00FF88", accentSoft: "#80FFB0", accentHot: "#FFD060", button: "#008840", buttonText: "#001A08", success: "#80FFB0", warning: "#FFD060", danger: "#8B1F1F", forceLow: "#A7F3D0", forceMid: "#FFD060", forceHigh: "#8B0000"),
+        HitRisePalette(id: "current", name: "当前 APP 配色", previewColors: ["#F0FFFB", "#10BDAA", "#FF8A32"], backgroundTop: "#F0FFFB", backgroundBottom: "#E8FFF8", surfaceTop: "#FFFFFF", surfaceBottom: "#F7FFFD", card: "#FFFFFF", cardAlt: "#EFFFFA", stroke: "#CDEFE8", strokeStrong: "#8BEDE2", textPrimary: "#17343B", textSecondary: "#557A7D", textMuted: "#7FA0A3", accent: "#10BDAA", accentSoft: "#DFFFF7", accentHot: "#FF8A32", button: "#10BDAA", buttonText: "#FFFFFF", success: "#16C8B5", warning: "#FFD060", danger: "#E65A4F", forceLow: "#BFEFE5", forceMid: "#FFB347", forceHigh: "#C83A42"),
         HitRisePalette(id: "p01", name: "藏蓝粉紫", previewColors: ["#063C85", "#F7C3D9", "#BB5799"], backgroundTop: "#020613", backgroundBottom: "#09030A", surfaceTop: "#14214A", surfaceBottom: "#060817", card: "#121A38", cardAlt: "#171C29", stroke: "#5E4D85", strokeStrong: "#F7C3D9", textPrimary: "#FFF1FA", textSecondary: "#F7C3D9", textMuted: "#B9B7D0", accent: "#F7C3D9", accentSoft: "#FFD7EA", accentHot: "#BB5799", button: "#BB5799", buttonText: "#070817", success: "#8FD8FF", warning: "#F7C3D9", danger: "#7A2E5F", forceLow: "#7BB4FF", forceMid: "#F7C3D9", forceHigh: "#BB5799"),
         HitRisePalette(id: "p02", name: "晴空橙光", previewColors: ["#1387C0", "#FAEDD1", "#F4520D"], backgroundTop: "#031018", backgroundBottom: "#050404", surfaceTop: "#1A3039", surfaceBottom: "#071014", card: "#112A34", cardAlt: "#17313C", stroke: "#5C7F8F", strokeStrong: "#FAEDD1", textPrimary: "#FFF7E8", textSecondary: "#FAEDD1", textMuted: "#B8C8C9", accent: "#1387C0", accentSoft: "#FAEDD1", accentHot: "#F4520D", button: "#F4520D", buttonText: "#071014", success: "#66D9FF", warning: "#FAEDD1", danger: "#8F321C", forceLow: "#1387C0", forceMid: "#FFAF57", forceHigh: "#F4520D"),
         HitRisePalette(id: "p03", name: "麦浪青野", previewColors: ["#F1ECE0", "#117C0D", "#FAC75E"], backgroundTop: "#031307", backgroundBottom: "#040603", surfaceTop: "#1B2D20", surfaceBottom: "#071308", card: "#14271A", cardAlt: "#1C3322", stroke: "#6B7F36", strokeStrong: "#FAC75E", textPrimary: "#FFF7E8", textSecondary: "#F1ECE0", textMuted: "#B7C7AA", accent: "#117C0D", accentSoft: "#F1ECE0", accentHot: "#FAC75E", button: "#FAC75E", buttonText: "#061306", success: "#87E184", warning: "#FAC75E", danger: "#7A2D18", forceLow: "#117C0D", forceMid: "#6BBF36", forceHigh: "#FAC75E"),
@@ -45,6 +45,8 @@ struct HitRisePalette: Identifiable, Equatable {
     static func byId(_ id: String) -> HitRisePalette {
         all.first(where: { $0.id == id }) ?? all[0]
     }
+
+    var isLight: Bool { id == Self.defaultId }
 }
 
 enum HitRiseHomePage: String, CaseIterable, Identifiable {
@@ -70,6 +72,15 @@ enum HitRiseHomePage: String, CaseIterable, Identifiable {
         case .achievements: return "star.fill"
         case .leaderboard: return "list.number"
         case .profile: return "person.fill"
+        }
+    }
+
+    func assetIcon(selected: Bool) -> String {
+        switch self {
+        case .training: return selected ? "home_nav_training_selected" : "home_nav_training"
+        case .achievements: return selected ? "home_nav_achievements_selected" : "home_nav_achievements"
+        case .leaderboard: return selected ? "home_nav_leaderboard_selected" : "home_nav_leaderboard"
+        case .profile: return selected ? "home_nav_profile_selected" : "home_nav_profile"
         }
     }
 }
@@ -99,7 +110,7 @@ struct ContentView: View {
                     .padding(.bottom, 8)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(palette.isLight ? .light : .dark)
         .sheet(isPresented: $showingSettings) {
             HitRiseSettingsView()
                 .environmentObject(app)
@@ -150,11 +161,12 @@ struct HitRiseHeader: View {
             }
             Spacer()
             Button(action: onSettings) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color(hex: palette.accent))
+                Image("home_icon_settings")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
                     .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color(hex: palette.card)))
+                    .background(Circle().fill(Color(hex: palette.isLight ? "#FFFFFF" : palette.card)))
                     .overlay(Circle().stroke(Color(hex: palette.stroke), lineWidth: 1))
             }
             .buttonStyle(.plain)
@@ -176,18 +188,20 @@ struct HitRiseBottomNav: View {
                     selectedPage = page
                 } label: {
                     VStack(spacing: 4) {
-                        Image(systemName: page.icon)
-                            .font(.system(size: 18, weight: .bold))
+                        Image(page.assetIcon(selected: selectedPage == page))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 28, height: 28)
                         Text(page.title)
                             .font(.caption2.weight(.bold))
                             .lineLimit(1)
                     }
-                    .foregroundStyle(selectedPage == page ? Color(hex: palette.buttonText) : Color(hex: palette.textSecondary))
+                    .foregroundStyle(selectedPage == page ? Color(hex: "#09A99A") : Color(hex: "#6B7C80"))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 7)
                     .background(
-                        Capsule()
-                            .fill(selectedPage == page ? Color(hex: palette.accentHot) : Color.clear)
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(selectedPage == page ? Color(hex: "#EFFFFA") : Color.clear)
                     )
                 }
                 .buttonStyle(.plain)
@@ -195,16 +209,10 @@ struct HitRiseBottomNav: View {
         }
         .padding(8)
         .background(
-            Capsule()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: palette.surfaceTop), Color(hex: palette.surfaceBottom)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(Capsule().stroke(Color(hex: palette.stroke), lineWidth: 1))
-                .shadow(color: .black.opacity(0.35), radius: 14, x: 0, y: 6)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color(hex: palette.isLight ? "#FFFFFF" : palette.surfaceTop))
+                .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color(hex: palette.isLight ? "#DDF4EF" : palette.stroke), lineWidth: 1))
+                .shadow(color: Color.black.opacity(palette.isLight ? 0.10 : 0.35), radius: 14, x: 0, y: 6)
         )
     }
 }
@@ -262,7 +270,7 @@ struct HitRiseBadge: View {
     var body: some View {
         Text(text)
             .font(.caption2.weight(.black))
-            .foregroundStyle(Color(hex: textColor ?? palette.buttonText))
+            .foregroundStyle(Color(hex: textColor ?? (palette.isLight ? palette.textPrimary : palette.buttonText)))
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(Capsule().fill(Color(hex: fill ?? palette.accentSoft)))

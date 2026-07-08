@@ -1,0 +1,12 @@
+﻿{
+    "images":  [
+                   {
+                       "filename":  "home_metric_hits.png",
+                       "idiom":  "universal"
+                   }
+               ],
+    "info":  {
+                 "author":  "xcode",
+                 "version":  1
+             }
+}

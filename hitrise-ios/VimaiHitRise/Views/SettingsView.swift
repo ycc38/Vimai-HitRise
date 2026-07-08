@@ -46,7 +46,7 @@ struct HitRiseSettingsView: View {
             TrainingSetupView()
                 .environmentObject(app)
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(palette.isLight ? .light : .dark)
     }
 
     private func palettePanel(_ palette: HitRisePalette) -> some View {
