@@ -4,10 +4,10 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 
 ## Project Identity
 
-- Display name: `Vimai HitRise`
+- Display name: `智能拳击速度球`
 - Chinese subtitle: `立式拳击速度球`
 - Bundle ID: `com.zclei.hitrise`
-- Initial API base URL: `http://152.136.62.157/hitrise`
+- API base URL: `https://hitrise.86086.cn/hitrise`
 - Preferred future domain: `https://api.vimaihitrise.com/hitrise`
 - Fallback future domain: `https://api.vimai-hitrise.com/hitrise`
 
@@ -29,8 +29,8 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 2. Select your Apple Developer team for automatic signing.
 3. Replace the generated placeholder app icon with production artwork.
 4. Test on a real iPhone with the SENBALL BLE device.
-5. Prefer switching `HITRISE_API_BASE_URL` in `Resources/Info.plist` to HTTPS before App Store review.
+5. `HITRISE_API_BASE_URL` in `Resources/Info.plist` is configured for the current HTTPS endpoint.
 
 ## App Store Notes
 
-The project intentionally allows HTTP only for `152.136.62.157` during early development. This is weaker than a production HTTPS domain and may increase App Review risk. Register `vimaihitrise.com` on Aliyun when ready, point an API subdomain at the existing server, configure TLS in Nginx, then remove the ATS exception.
+The project now uses the production HTTPS endpoint `https://hitrise.86086.cn/hitrise`, so the early HTTP/IP ATS exception has been removed.

@@ -89,6 +89,7 @@ struct ContentView: View {
     @EnvironmentObject private var app: AppViewModel
     @State private var selectedPage: HitRiseHomePage = .training
     @State private var showingSettings = false
+    @State private var showingLaunchSplash = true
 
     var body: some View {
         let palette = app.palette
@@ -109,8 +110,21 @@ struct ContentView: View {
                     .padding(.horizontal, 14)
                     .padding(.bottom, 8)
             }
+
+            if showingLaunchSplash {
+                HitRiseLaunchSplashView {
+                    dismissLaunchSplash()
+                }
+                .transition(.opacity.combined(with: .scale(scale: 1.02)))
+                .zIndex(20)
+            }
         }
         .preferredColorScheme(palette.isLight ? .light : .dark)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+                dismissLaunchSplash()
+            }
+        }
         .sheet(isPresented: $showingSettings) {
             HitRiseSettingsView()
                 .environmentObject(app)
@@ -129,6 +143,90 @@ struct ContentView: View {
         case .profile:
             ProfileView()
         }
+    }
+
+    private func dismissLaunchSplash() {
+        guard showingLaunchSplash else { return }
+        withAnimation(.easeInOut(duration: 0.32)) {
+            showingLaunchSplash = false
+        }
+    }
+}
+
+struct HitRiseLaunchSplashView: View {
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color(hex: "#140800")
+                .ignoresSafeArea()
+
+            Image("home_banner")
+                .resizable()
+                .scaledToFill()
+                .opacity(0.36)
+                .ignoresSafeArea()
+
+            VStack {
+                LinearGradient(
+                    colors: [Color(hex: "#08111A").opacity(0.90), Color(hex: "#06001A").opacity(0.07)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 220)
+                Spacer()
+                LinearGradient(
+                    colors: [Color(hex: "#08111A").opacity(0.95), Color(hex: "#06001A").opacity(0.07)],
+                    startPoint: .bottom,
+                    endPoint: .top
+                )
+                .frame(height: 260)
+            }
+            .ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("HITRISE")
+                    .font(.system(size: 16, weight: .black))
+                    .tracking(1.2)
+                    .foregroundStyle(Color(hex: "#FFF8E8"))
+                Text("智能拳击球训练")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color(hex: "#CAA26A"))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.top, 42)
+            .padding(.horizontal, 26)
+
+            Image("wavemill_logo")
+                .resizable()
+                .scaledToFit()
+                .padding(18)
+                .frame(maxWidth: 320)
+                .background(
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white, Color(hex: "#F7FBFF")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                                .stroke(Color(hex: "#BFEFF7F3"), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 8)
+                )
+                .padding(.horizontal, 24)
+
+            Text("轻触跳过")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(hex: "#B88A54"))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .padding(.bottom, 34)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onDismiss)
     }
 }
 
