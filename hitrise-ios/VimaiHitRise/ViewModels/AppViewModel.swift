@@ -42,6 +42,12 @@ final class AppViewModel: NSObject, ObservableObject {
     private var lastTelemetryHitCounter: Int?
     private let defaults = UserDefaults.standard
 
+    private enum FixedPreference {
+        static let paletteId = HitRisePalette.defaultId
+        static let soundEffectId = "sfx_gym"
+        static let backgroundMusicId = "none"
+    }
+
     var identity: ActivationState {
         identityStore.load()
     }
@@ -101,20 +107,15 @@ final class AppViewModel: NSObject, ObservableObject {
     func refreshAudioCatalogs() async {
         do {
             let effects = try await api.fetchSoundEffects()
-            let music = try await api.fetchBackgroundMusic()
             soundEffects = effects.items?.ifEmpty(bundledSoundEffects()) ?? bundledSoundEffects()
-            backgroundMusic = [CloudSoundAsset.noMusic] + (music.items ?? bundledBackgroundMusic())
-            if soundEffects.noneMatch(id: selectedSoundEffectId) {
-                selectedSoundEffectId = soundEffects.first?.id ?? "sfx_gym"
-            }
-            if backgroundMusic.noneMatch(id: selectedBackgroundMusicId) {
-                selectedBackgroundMusicId = "none"
-            }
+            backgroundMusic = [CloudSoundAsset.noMusic]
+            enforceFixedAppearanceAndAudioPreferences()
             audioMessage = "音频目录已同步"
             saveLocalState()
         } catch {
             soundEffects = bundledSoundEffects()
-            backgroundMusic = [CloudSoundAsset.noMusic] + bundledBackgroundMusic()
+            backgroundMusic = [CloudSoundAsset.noMusic]
+            enforceFixedAppearanceAndAudioPreferences()
             audioMessage = "云端音频不可用，使用内置目录"
         }
     }
@@ -185,7 +186,7 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     func updatePalette(_ id: String) {
-        selectedPaletteId = id
+        selectedPaletteId = FixedPreference.paletteId
         saveLocalState()
     }
 
@@ -195,12 +196,13 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     func selectSoundEffect(_ asset: CloudSoundAsset) {
-        selectedSoundEffectId = asset.id
+        enforceFixedAppearanceAndAudioPreferences()
         saveLocalState()
     }
 
     func selectBackgroundMusic(_ asset: CloudSoundAsset) {
-        selectedBackgroundMusicId = asset.id
+        selectedBackgroundMusicId = FixedPreference.backgroundMusicId
+        stopBackgroundMusic()
         saveLocalState()
     }
 
@@ -367,6 +369,7 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func startBackgroundMusicIfNeeded() {
+        selectedBackgroundMusicId = FixedPreference.backgroundMusicId
         guard selectedBackgroundMusicId != "none",
               let asset = selectedBackgroundMusic else { return }
         backgroundPlayer = AVPlayer(url: asset.url)
@@ -391,10 +394,10 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func loadLocalState() {
-        selectedPaletteId = defaults.string(forKey: Keys.paletteId) ?? HitRisePalette.defaultId
+        selectedPaletteId = FixedPreference.paletteId
         selectedLanguage = defaults.string(forKey: Keys.language) ?? "zh"
-        selectedSoundEffectId = defaults.string(forKey: Keys.soundEffectId) ?? "sfx_gym"
-        selectedBackgroundMusicId = defaults.string(forKey: Keys.backgroundMusicId) ?? "none"
+        selectedSoundEffectId = FixedPreference.soundEffectId
+        selectedBackgroundMusicId = FixedPreference.backgroundMusicId
         trainingLevel = max(1, defaults.integer(forKey: Keys.trainingLevel))
         if trainingLevel == 1, defaults.object(forKey: Keys.trainingLevel) == nil {
             trainingLevel = 1
@@ -409,6 +412,7 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func saveLocalState() {
+        enforceFixedAppearanceAndAudioPreferences()
         defaults.set(selectedPaletteId, forKey: Keys.paletteId)
         defaults.set(selectedLanguage, forKey: Keys.language)
         defaults.set(selectedSoundEffectId, forKey: Keys.soundEffectId)
@@ -428,6 +432,16 @@ final class AppViewModel: NSObject, ObservableObject {
 
     private func bundledBackgroundMusic() -> [CloudSoundAsset] {
         CloudSoundAsset.fallbackMusic(baseURL: config.apiBaseURL)
+    }
+
+    private func enforceFixedAppearanceAndAudioPreferences() {
+        selectedPaletteId = FixedPreference.paletteId
+        if soundEffects.noneMatch(id: FixedPreference.soundEffectId) {
+            selectedSoundEffectId = soundEffects.first?.id ?? FixedPreference.soundEffectId
+        } else {
+            selectedSoundEffectId = FixedPreference.soundEffectId
+        }
+        selectedBackgroundMusicId = FixedPreference.backgroundMusicId
     }
 
     private enum Keys {
