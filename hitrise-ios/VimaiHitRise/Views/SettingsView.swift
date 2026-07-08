@@ -9,92 +9,215 @@ struct SettingsView: View {
 struct HitRiseSettingsView: View {
     @EnvironmentObject private var app: AppViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showingTrainingSetup = false
+    @State private var draftLanguage = "zh"
+
+    var onCancel: (() -> Void)?
+    var onSave: (() -> Void)?
+
+    init(onCancel: (() -> Void)? = nil, onSave: (() -> Void)? = nil) {
+        self.onCancel = onCancel
+        self.onSave = onSave
+    }
 
     var body: some View {
-        let palette = app.palette
-        NavigationStack {
-            ZStack {
-                LinearGradient(colors: [Color(hex: palette.backgroundTop), Color(hex: palette.backgroundBottom)], startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea()
+        ZStack {
+            Color.black.opacity(0.58)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    cancel()
+                }
+
+            VStack(spacing: 0) {
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 22) {
+                        header
                         BluetoothPanel()
-                        languagePanel(palette)
-                        trainingPanel(palette)
-                        appPanel(palette)
+                        languagePanel
                     }
-                    .padding()
+                    .padding(.horizontal, 24)
+                    .padding(.top, 26)
+                    .padding(.bottom, 18)
                 }
+                .scrollIndicators(.hidden)
+                .background(
+                    RoundedRectangle(cornerRadius: 34, style: .continuous)
+                        .fill(Color(hex: "#F4FFFC"))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                                .stroke(Color(hex: "#8FE5D8"), lineWidth: 1.4)
+                        )
+                        .shadow(color: Color.black.opacity(0.28), radius: 18, x: 0, y: 10)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+
+                actionButtons
             }
-            .navigationTitle("设置")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("关闭") { dismiss() }
+            .frame(maxWidth: 430)
+            .frame(maxHeight: .infinity)
+            .padding(.horizontal, 14)
+            .padding(.top, 22)
+            .padding(.bottom, 24)
+        }
+        .onAppear {
+            draftLanguage = app.selectedLanguage
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("蓝牙与语言设置")
+                .font(.system(size: 30, weight: .black, design: .rounded))
+                .foregroundStyle(Color(hex: "#17343B"))
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
+
+            Text("连接 SENBALL# 设备，并选择 APP 显示语言。")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color(hex: "#557A7D"))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 6)
+    }
+
+    private var languagePanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("APP 语言")
+                    .font(.system(size: 24, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(hex: "#19C5B7"))
+                Text("界面和训练提示会按照这里的语言显示。")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(hex: "#557A7D"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(spacing: 12) {
+                languageRow(code: "zh", title: "简体中文")
+                languageRow(code: "en", title: "English")
+                languageRow(code: "fr", title: "Français")
+                languageRow(code: "th", title: "ไทย")
+            }
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(Color(hex: "#CBEFE7"), lineWidth: 1.5)
+                )
+                .shadow(color: Color(hex: "#5BCBBC").opacity(0.18), radius: 10, x: 0, y: 5)
+        )
+    }
+
+    private func languageRow(code: String, title: String) -> some View {
+        let selected = draftLanguage == code
+        return Button {
+            draftLanguage = code
+        } label: {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .stroke(Color(hex: selected ? "#FFFFFF" : "#20C8BA"), lineWidth: 4)
+                        .frame(width: 28, height: 28)
+                    if selected {
+                        Circle()
+                            .fill(Color.white.opacity(0.92))
+                            .frame(width: 13, height: 13)
+                    }
                 }
+
+                Text(title)
+                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(hex: selected ? "#FFFFFF" : "#17343B"))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Spacer(minLength: 0)
             }
+            .padding(.horizontal, 16)
+            .frame(height: 62)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(
+                        selected
+                            ? LinearGradient(
+                                colors: [Color(hex: "#67E5DC"), Color(hex: "#10BDAA")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            : LinearGradient(
+                                colors: [Color.white, Color.white],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .stroke(Color(hex: selected ? "#8CF4EA" : "#CBEFE7"), lineWidth: 1.4)
+                    )
+                    .shadow(color: Color.black.opacity(selected ? 0.16 : 0.09), radius: 7, x: 0, y: 4)
+            )
         }
-        .sheet(isPresented: $showingTrainingSetup) {
-            TrainingSetupView()
-                .environmentObject(app)
-        }
-        .preferredColorScheme(palette.isLight ? .light : .dark)
+        .buttonStyle(.plain)
     }
 
-    private func languagePanel(_ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette) {
-            HitRiseSectionTitle(title: "APP 语言", subtitle: "首版中文优先，其他语言保留入口。", palette: palette)
-            Picker("语言", selection: Binding(get: { app.selectedLanguage }, set: { app.updateLanguage($0) })) {
-                Text("简体中文").tag("zh")
-                Text("English").tag("en")
-                Text("Français").tag("fr")
-                Text("ไทย").tag("th")
+    private var actionButtons: some View {
+        HStack(spacing: 14) {
+            Spacer()
+            Button {
+                cancel()
+            } label: {
+                Text("取消")
+                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(hex: "#17343B"))
+                    .frame(width: 92, height: 92)
+                    .background(Circle().fill(Color.white))
+                    .overlay(Circle().stroke(Color(hex: "#D7F1EC"), lineWidth: 1.2))
+                    .shadow(color: Color.black.opacity(0.18), radius: 10, x: 0, y: 5)
             }
-            .pickerStyle(.segmented)
+            .buttonStyle(.plain)
+
+            Button {
+                save()
+            } label: {
+                Text("保存")
+                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .foregroundStyle(Color.white)
+                    .frame(width: 92, height: 92)
+                    .background(
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "#64E7DD"), Color(hex: "#18C4B6")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    )
+                    .overlay(Circle().stroke(Color.white.opacity(0.86), lineWidth: 1.4))
+                    .shadow(color: Color(hex: "#18C4B6").opacity(0.36), radius: 10, x: 0, y: 5)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+    }
+
+    private func cancel() {
+        if let onCancel {
+            onCancel()
+        } else {
+            dismiss()
         }
     }
 
-    private func trainingPanel(_ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette) {
-            HitRiseSectionTitle(title: "训练设置", subtitle: "当前 \(app.training.selectedSetup.label) | \(app.training.selectedSetup.rhythmMode.title) | \(app.training.selectedSetup.bpm) BPM", palette: palette)
-            HitRiseActionButton(title: "打开训练设置", systemImage: "slider.horizontal.3", palette: palette, fill: palette.accentHot) {
-                showingTrainingSetup = true
-            }
+    private func save() {
+        app.updateLanguage(draftLanguage)
+        if let onSave {
+            onSave()
+        } else {
+            dismiss()
         }
-    }
-
-    private func appPanel(_ palette: HitRisePalette) -> some View {
-        HitRiseCard(palette: palette) {
-            HitRiseSectionTitle(title: "应用信息", subtitle: "智能拳击速度球 | com.zclei.hitrise", palette: palette)
-            Text(app.config.apiBaseURL.absoluteString)
-                .font(.caption.monospaced())
-                .foregroundStyle(Color(hex: palette.warning))
-            NavigationLink("隐私政策摘要") {
-                LegalTextView(title: "隐私政策摘要", text: LegalCopy.privacySummary, palette: palette)
-            }
-            NavigationLink("用户协议摘要") {
-                LegalTextView(title: "用户协议摘要", text: LegalCopy.userAgreementSummary, palette: palette)
-            }
-        }
-        .foregroundStyle(Color(hex: palette.textPrimary))
-    }
-}
-
-private struct LegalTextView: View {
-    let title: String
-    let text: String
-    let palette: HitRisePalette
-
-    var body: some View {
-        ScrollView {
-            Text(text)
-                .foregroundStyle(Color(hex: palette.textSecondary))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-        }
-        .background(Color(hex: palette.backgroundBottom))
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

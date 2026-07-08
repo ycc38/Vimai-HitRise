@@ -115,16 +115,30 @@ struct ContentView: View {
                 .transition(.opacity.combined(with: .scale(scale: 1.02)))
                 .zIndex(20)
             }
+
+            if showingSettings {
+                HitRiseSettingsView(
+                    onCancel: {
+                        withAnimation(.easeInOut(duration: 0.24)) {
+                            showingSettings = false
+                        }
+                    },
+                    onSave: {
+                        withAnimation(.easeInOut(duration: 0.24)) {
+                            showingSettings = false
+                        }
+                    }
+                )
+                .environmentObject(app)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                .zIndex(30)
+            }
         }
         .preferredColorScheme(palette.isLight ? .light : .dark)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
                 dismissLaunchSplash()
             }
-        }
-        .sheet(isPresented: $showingSettings) {
-            HitRiseSettingsView()
-                .environmentObject(app)
         }
     }
 
