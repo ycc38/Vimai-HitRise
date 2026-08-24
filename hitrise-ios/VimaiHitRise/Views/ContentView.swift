@@ -133,6 +133,15 @@ struct ContentView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 .zIndex(30)
             }
+
+            if !showingLaunchSplash, app.cloudConsentState == .undecided {
+                CloudDataConsentView(
+                    onDecline: { app.setCloudConsent(false) },
+                    onAccept: { app.setCloudConsent(true) }
+                )
+                .transition(.opacity)
+                .zIndex(40)
+            }
         }
         .preferredColorScheme(palette.isLight ? .light : .dark)
         .onAppear {
@@ -163,6 +172,80 @@ struct ContentView: View {
         withAnimation(.easeInOut(duration: 0.32)) {
             showingLaunchSplash = false
         }
+    }
+}
+
+struct CloudDataConsentView: View {
+    let onDecline: () -> Void
+    let onAccept: () -> Void
+
+    private let privacyURL = URL(string: "https://ycc38.github.io/Vimai-HitRise/privacy.html")!
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.72)
+                .ignoresSafeArea()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Image(systemName: "cloud.fill")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(Color(hex: "#10BDAA"))
+
+                    Text("云端训练记录与排行榜")
+                        .font(.system(size: 26, weight: .black, design: .rounded))
+                        .foregroundStyle(Color(hex: "#17343B"))
+
+                    Text("开启后，Vimai HitRise 会将匿名用户编号、昵称和训练成绩上传至 HitRise 服务器，用于同步训练历史、成就、个人统计和排行榜。排行榜可能向其他用户显示你的昵称、段位和成绩。")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color(hex: "#456A6D"))
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Label("你可以选择暂不开启并继续使用本地训练功能，之后也可以随时在设置中更改。", systemImage: "iphone")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(hex: "#557A7D"))
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Link(destination: privacyURL) {
+                        Label("查看隐私政策", systemImage: "doc.text")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color(hex: "#087F75"))
+                    }
+
+                    HStack(spacing: 12) {
+                        Button("暂不开启", action: onDecline)
+                            .buttonStyle(CloudConsentButtonStyle(fill: "#E7F2EF", foreground: "#17343B"))
+                        Button("同意并开启", action: onAccept)
+                            .buttonStyle(CloudConsentButtonStyle(fill: "#10BDAA", foreground: "#FFFFFF"))
+                    }
+                }
+                .padding(24)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color(hex: "#F8FFFD"))
+                )
+                .padding(.horizontal, 18)
+                .padding(.vertical, 44)
+                .frame(maxWidth: 520)
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
+private struct CloudConsentButtonStyle: ButtonStyle {
+    let fill: String
+    let foreground: String
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline.weight(.bold))
+            .foregroundStyle(Color(hex: foreground))
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(hex: fill).opacity(configuration.isPressed ? 0.72 : 1))
+            )
     }
 }
 
@@ -252,7 +335,7 @@ struct HitRiseHeader: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("智能拳击速度球")
+                Text("Vimai HitRise")
                     .font(.system(size: 22, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: palette.textPrimary))
                 HStack(spacing: 8) {

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>zh-Hans</string>
 	<key>CFBundleDisplayName</key>
-	<string>智能拳击速度球</string>
+	<string>Vimai HitRise</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>智能拳击速度球</string>
+	<string>Vimai HitRise</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -30,7 +30,7 @@
 		<false/>
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>智能拳击速度球需要使用蓝牙连接立式拳击速度球，并接收拳数、力度和电量等训练数据。</string>
+	<string>Vimai HitRise 需要使用蓝牙连接立式拳击速度球，并接收拳数、力度和电量等训练数据。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -10,6 +10,7 @@ struct HitRiseSettingsView: View {
     @EnvironmentObject private var app: AppViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var draftLanguage = "zh"
+    @State private var draftCloudEnabled = false
 
     var onCancel: (() -> Void)?
     var onSave: (() -> Void)?
@@ -32,6 +33,7 @@ struct HitRiseSettingsView: View {
                     VStack(alignment: .leading, spacing: 22) {
                         header
                         BluetoothPanel()
+                        cloudSyncPanel
                         languagePanel
                     }
                     .padding(.horizontal, 24)
@@ -60,7 +62,50 @@ struct HitRiseSettingsView: View {
         }
         .onAppear {
             draftLanguage = app.selectedLanguage
+            draftCloudEnabled = app.hasCloudConsent
         }
+    }
+
+    private var cloudSyncPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("云端训练记录与排行榜")
+                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .foregroundStyle(Color(hex: "#19C5B7"))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(draftCloudEnabled ? "已允许上传匿名资料和训练成绩" : "训练成绩仅保留在本地，不会上传")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color(hex: "#557A7D"))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                Toggle("", isOn: $draftCloudEnabled)
+                    .labelsHidden()
+                    .tint(Color(hex: "#10BDAA"))
+            }
+
+            Text("开启后，App 会将匿名用户编号、昵称、训练成绩和统计数据上传至 HitRise 服务器，用于云端历史、成就、个人资料和排行榜；排行榜可能公开昵称、段位和成绩。")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color(hex: "#557A7D"))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Link(destination: URL(string: "https://ycc38.github.io/Vimai-HitRise/privacy.html")!) {
+                Label("查看隐私政策", systemImage: "doc.text")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color(hex: "#087F75"))
+            }
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(Color(hex: "#CBEFE7"), lineWidth: 1.5)
+                )
+                .shadow(color: Color(hex: "#5BCBBC").opacity(0.18), radius: 10, x: 0, y: 5)
+        )
     }
 
     private var header: some View {
@@ -214,6 +259,7 @@ struct HitRiseSettingsView: View {
 
     private func save() {
         app.updateLanguage(draftLanguage)
+        app.setCloudConsent(draftCloudEnabled)
         if let onSave {
             onSave()
         } else {

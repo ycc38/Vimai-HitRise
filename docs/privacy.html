@@ -21,7 +21,7 @@
     <header class="article-header">
       <span class="eyebrow">Privacy Policy / 隐私政策</span>
       <h1>Vimai HitRise 隐私政策</h1>
-      <div class="meta-row"><span>版本：V1.2</span><span>更新日期：2026-07-13</span><span>生效日期：2026-07-13</span></div>
+      <div class="meta-row"><span>版本：V1.3</span><span>更新日期：2026-08-24</span><span>生效日期：2026-08-24</span></div>
       <div class="toc"><a href="#zh">中文</a><a href="#en">English</a><a href="./data-deletion.html">数据删除</a></div>
     </header>
 
@@ -35,7 +35,7 @@
       <section>
         <h2>二、我们处理的信息</h2>
         <h3>1. 匿名用户和设备标识</h3>
-        <p>App 无需用户注册登录。首次运行时会在本机生成安装标识、匿名序列号和设备摘要，并使用设备型号、App 版本及必要的认证状态，提供云端训练记录、个人资料、成就和排行榜服务。这些标识不包含广告标识符，但可能与云端用户资料和训练记录关联。</p>
+        <p>App 无需用户注册登录。首次运行时会在本机生成安装标识、匿名序列号和设备摘要。只有在你明确同意开启“云端训练记录与排行榜”后，App 才会使用设备型号、App 版本及必要的认证状态创建云端资料。这些标识不包含广告标识符，但同意后可能与云端用户资料和训练记录关联。</p>
         <h3>2. 蓝牙设备信息</h3>
         <p>为连接智能拳击硬件，App 会处理蓝牙设备名称、设备标识、连接状态、信号信息、电量、充电状态、拳击计数、力度数据和蓝牙通信状态。蓝牙扫描会优先识别名称包含 SENBALL 的兼容设备。</p>
         <h3>3. 训练与运动数据</h3>
@@ -50,7 +50,7 @@
         <h2>三、权限说明</h2>
         <ul>
           <li><strong>蓝牙：</strong>用于扫描、连接 SENBALL# 设备并接收拳数、力度和电量数据。</li>
-          <li><strong>网络：</strong>用于创建或更新匿名用户资料、同步训练记录、加载个人资料、成就、排行榜及音效目录。</li>
+          <li><strong>网络：</strong>用于加载通用音效资源；在你明确同意后，还用于创建或更新匿名用户资料、同步训练记录以及加载个人资料、成就和排行榜。</li>
           <li><strong>音频：</strong>用于播放训练提示和击打音效。当前版本不使用麦克风进行拳击计数，也不采集录音。</li>
         </ul>
         <p>iOS 版本不需要定位权限，不主动收集实时位置轨迹。</p>
@@ -58,7 +58,8 @@
 
       <section>
         <h2>四、云端同步方式</h2>
-        <p>App 启动时会连接 HitRise 云端服务，以创建或更新与本机匿名标识关联的用户资料，并读取历史、成就和排行榜数据。训练结束后，训练报告可能自动上传，用于保存历史记录、更新个人统计、成就和排行榜。若网络不可用，相关云端功能可能暂时无法使用。</p>
+        <p>首次使用时，App 会在上传训练资料前询问你是否开启“云端训练记录与排行榜”。在你同意前，App 不会创建或更新匿名云端用户资料，不会上传训练报告或成绩，也不会读取排行榜。你可以拒绝并继续使用本地训练功能。</p>
+        <p>同意后，App 会创建或更新与本机匿名标识关联的云端资料，并同步历史、成就、个人统计和排行榜；训练结束后会上传训练报告。你可以随时在设置中关闭该功能，关闭后将停止后续上传和同步。此前已同步的数据不会因关闭而自动删除，如需删除请使用本政策提供的数据删除渠道。</p>
       </section>
 
       <section>
@@ -92,7 +93,7 @@
 
       <section>
         <h2>九、你的权利</h2>
-        <p>你可以在 App 中查看训练记录、成就、排行榜和个人资料，并修改部分资料。你还可以申请访问、更正、删除相关云端数据或移除排行榜展示。请通过<a href="./data-deletion.html">数据删除页面</a>提交申请，我们会在完成必要核验后处理。</p>
+        <p>你可以拒绝或撤回云端训练数据和排行榜授权，并继续使用本地训练功能。开启云端功能后，你可以在 App 中查看训练记录、成就、排行榜和个人资料并修改部分资料。你还可以申请访问、更正、删除相关云端数据或移除排行榜展示。请通过<a href="./data-deletion.html">数据删除页面</a>提交申请，我们会在完成必要核验后处理。</p>
       </section>
 
       <section>
@@ -115,7 +116,7 @@
     <div id="en" lang="en">
       <section>
         <h2>HitRise Privacy Policy — English</h2>
-        <div class="meta-row"><span>Version V1.2</span><span>Updated and effective July 13, 2026</span></div>
+        <div class="meta-row"><span>Version V1.3</span><span>Updated and effective August 24, 2026</span></div>
         <p>Vimai HitRise (“HitRise”) is a smart boxing speed-ball training app provided by Shaoxing Weimai Technology Co., Ltd. It connects to compatible SENBALL# Bluetooth hardware, processes training data, creates reports, and provides history, achievements, leaderboards, and profile features.</p>
       </section>
       <section>
@@ -130,8 +131,9 @@
       </section>
       <section>
         <h2>Permissions and cloud sync</h2>
-        <p>Bluetooth permission is used to scan, connect, and receive accessory data. Network access is used to create or update an anonymous cloud profile and sync history, profiles, achievements, leaderboards, and sound catalogs. Audio is used for coaching prompts and effects. The iOS app does not require location access and does not use the microphone for punch counting.</p>
-        <p>When the app starts, it may contact the HitRise service to create or update the anonymous profile associated with the device and retrieve cloud data. A completed training report may be uploaded automatically to maintain history, statistics, achievements, and leaderboards.</p>
+        <p>Bluetooth permission is used to scan, connect, and receive accessory data. Network access is used to load generic audio resources and, after explicit consent, to create or update an anonymous cloud profile and sync history, profiles, achievements, and leaderboards. Audio is used for coaching prompts and effects. The iOS app does not require location access and does not use the microphone for punch counting.</p>
+        <p>Before uploading any training information, the app asks whether the user wishes to enable Cloud Training Records &amp; Leaderboards. Before consent, the app does not create or update an anonymous cloud profile, upload training reports or scores, or retrieve leaderboards. The user may decline and continue using local training features.</p>
+        <p>After consent, completed training reports are uploaded to maintain history, statistics, achievements, and leaderboards. Consent can be withdrawn in Settings to stop future uploads and synchronization. Previously synchronized information is not automatically deleted when consent is withdrawn; users may submit a deletion request using the link below.</p>
       </section>
       <section>
         <h2>Use, sharing, and retention</h2>
@@ -140,7 +142,7 @@
       </section>
       <section>
         <h2>Your choices, safety, and contact</h2>
-        <p>You may request access, correction, deletion, or removal from leaderboard display through the <a href="./data-deletion.html">data deletion page</a>. Reasonable technical and administrative safeguards are used, but no internet or Bluetooth system can be guaranteed absolutely secure.</p>
+        <p>You may decline or withdraw cloud training and leaderboard consent while continuing to use local training features. You may also request access, correction, deletion, or removal from leaderboard display through the <a href="./data-deletion.html">data deletion page</a>. Reasonable technical and administrative safeguards are used, but no internet or Bluetooth system can be guaranteed absolutely secure.</p>
         <p>Punch count, force, calories, and fat-burn values are exercise feedback and estimates only. They are not medical, nutrition, rehabilitation, or professional competition advice.</p>
         <p>Operator: Shaoxing Weimai Technology Co., Ltd.<br>Email: <a href="mailto:zclei@vip.sina.com">zclei@vip.sina.com</a></p>
       </section>

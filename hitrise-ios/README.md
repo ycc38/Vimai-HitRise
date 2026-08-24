@@ -4,7 +4,7 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 
 ## Project Identity
 
-- Display name: `智能拳击速度球`
+- Display name: `Vimai HitRise`
 - Chinese subtitle: `立式拳击速度球`
 - Bundle ID: `com.zclei.hitrise`
 - API base URL: `https://hitrise.86086.cn/hitrise`

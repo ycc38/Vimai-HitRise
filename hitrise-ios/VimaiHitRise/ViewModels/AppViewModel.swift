@@ -2,6 +2,12 @@ import AVFoundation
 import Combine
 import Foundation
 
+enum CloudConsentState: String {
+    case undecided
+    case declined
+    case accepted
+}
+
 @MainActor
 final class AppViewModel: NSObject, ObservableObject {
     @Published var profile: CloudUserProfile?
@@ -26,6 +32,7 @@ final class AppViewModel: NSObject, ObservableObject {
     @Published var trainingStreak = 0
     @Published var dailyTargetDone = false
     @Published var latestCoachOutcome: TrainingCoachOutcome?
+    @Published private(set) var cloudConsentState: CloudConsentState = .undecided
 
     let ble = SensorBallBLEManager()
     let training = TrainingSessionController()
@@ -56,6 +63,10 @@ final class AppViewModel: NSObject, ObservableObject {
         HitRisePalette.byId(selectedPaletteId)
     }
 
+    var hasCloudConsent: Bool {
+        cloudConsentState == .accepted
+    }
+
     var selectedSoundEffect: CloudSoundAsset? {
         soundEffects.first(where: { $0.id == selectedSoundEffectId })
     }
@@ -79,11 +90,18 @@ final class AppViewModel: NSObject, ObservableObject {
         self.api = api
         super.init()
         loadLocalState()
+        soundEffects = bundledSoundEffects()
+        backgroundMusic = [CloudSoundAsset.noMusic]
+        enforceFixedAppearanceAndAudioPreferences()
         wireObjectChanges()
         wireCoachSpeech()
     }
 
     func bootstrap() async {
+        guard hasCloudConsent else {
+            cloudMessage = "云端训练记录与排行榜未开启"
+            return
+        }
         await runCloudAction(label: "正在准备本机用户资料...") {
             let response = try await api.bootstrap(state: identity)
             applyBootstrap(response)
@@ -92,6 +110,21 @@ final class AppViewModel: NSObject, ObservableObject {
             cloudMessage = "云端已同步"
         }
         await refreshAudioCatalogs()
+    }
+
+    func setCloudConsent(_ allowed: Bool) {
+        let nextState: CloudConsentState = allowed ? .accepted : .declined
+        guard cloudConsentState != nextState else { return }
+
+        cloudConsentState = nextState
+        defaults.set(nextState.rawValue, forKey: Keys.cloudConsentState)
+
+        if allowed {
+            Task { await bootstrap() }
+        } else {
+            clearCloudData()
+            cloudMessage = "云端训练记录与排行榜已关闭"
+        }
     }
 
     func refreshCloudData() async {
@@ -247,6 +280,10 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func runCloudAction(label: String, action: @MainActor () async throws -> Void) async {
+        guard hasCloudConsent else {
+            cloudMessage = "请先在设置中开启云端训练记录与排行榜"
+            return
+        }
         isCloudBusy = true
         cloudMessage = label
         do {
@@ -254,6 +291,17 @@ final class AppViewModel: NSObject, ObservableObject {
         } catch {
             cloudMessage = "云端失败：\(error.localizedDescription)"
         }
+        isCloudBusy = false
+    }
+
+    private func clearCloudData() {
+        profile = nil
+        statistics = nil
+        history = []
+        leaderboard = []
+        leaderboardMe = nil
+        achievements = []
+        tier = nil
         isCloudBusy = false
     }
 
@@ -394,6 +442,8 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func loadLocalState() {
+        cloudConsentState = defaults.string(forKey: Keys.cloudConsentState)
+            .flatMap(CloudConsentState.init(rawValue:)) ?? .undecided
         selectedPaletteId = FixedPreference.paletteId
         selectedLanguage = defaults.string(forKey: Keys.language) ?? "zh"
         selectedSoundEffectId = FixedPreference.soundEffectId
@@ -454,6 +504,7 @@ final class AppViewModel: NSObject, ObservableObject {
         static let trainingStreak = "hitrise.training.streak"
         static let dailyTargetDone = "hitrise.daily.target.done"
         static let trainingSetup = "hitrise.training.setup"
+        static let cloudConsentState = "hitrise.cloud.training.consent"
     }
 }
 
