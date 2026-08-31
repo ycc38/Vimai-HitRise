@@ -21,16 +21,18 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 - `URLSession` client for the existing FastAPI endpoints.
 - Local anonymous device profile using `UserDefaults` and SHA-256.
 - Bluetooth permission usage text, ATS HTTP exception for the current IP, and a minimal privacy manifest.
-- Generated placeholder AppIcon and AccentColor asset catalog for local Archive/TestFlight preparation.
+- Production teal AppIcon matching the released Android app, with iPhone, iPad, and 1024px App Store assets.
 
 ## Before TestFlight
 
 1. Open `VimaiHitRise.xcodeproj` in Xcode on macOS.
 2. Select your Apple Developer team for automatic signing.
-3. Replace the generated placeholder app icon with production artwork.
+3. Confirm the desktop name is `Vimai HitRise` and the teal Android-matching icon appears on the installed build.
 4. Test on a real iPhone with the SENBALL BLE device.
 5. `HITRISE_API_BASE_URL` in `Resources/Info.plist` is configured for the current HTTPS endpoint.
 
 ## App Store Notes
 
 The project now uses the production HTTPS endpoint `https://hitrise.86086.cn/hitrise`, so the early HTTP/IP ATS exception has been removed.
+
+The App Store name and `CFBundleDisplayName` / `CFBundleName` must remain `Vimai HitRise`; the bundle identifier remains `com.zclei.hitrise`. Codemagic checks the exported IPA identity and primary AppIcon before publishing to TestFlight. Its project build number overrides the local build number (26). Select the newly uploaded build in App Store Connect when resubmitting; changing source files does not update an already uploaded build.
