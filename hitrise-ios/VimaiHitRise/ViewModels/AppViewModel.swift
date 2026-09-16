@@ -77,13 +77,22 @@ final class AppViewModel: NSObject, ObservableObject {
 
     var leaderboardBoards: [(String, String)] {
         [
-            ("total_training_seconds", "训练时长"),
-            ("total_hits", "累计拳数"),
-            ("peak_force_n", "峰值力度"),
-            ("avg_force_n", "平均力度"),
-            ("calories_burned", "卡路里"),
-            ("fat_burned_grams", "燃脂")
+            ("total_training_seconds", localized("训练时长", "Duration", "Durée", "เวลา")),
+            ("total_hits", localized("累计拳数", "Total Punches", "Total de coups", "หมัดรวม")),
+            ("peak_force_n", localized("峰值评分", "Peak Score", "Score max.", "คะแนนสูงสุด")),
+            ("avg_force_n", localized("平均评分", "Average Score", "Score moyen", "คะแนนเฉลี่ย")),
+            ("calories_burned", localized("卡路里", "Calories", "Calories", "แคลอรี")),
+            ("fat_burned_grams", localized("燃脂", "Fat Burn", "Graisse brûlée", "ไขมันที่เผาผลาญ"))
         ]
+    }
+
+    func localized(_ zh: String, _ en: String, _ fr: String, _ th: String) -> String {
+        switch selectedLanguage {
+        case "en": return en
+        case "fr": return fr
+        case "th": return th
+        default: return zh
+        }
     }
 
     init(api: HitRiseAPIClient = HitRiseAPIClient()) {

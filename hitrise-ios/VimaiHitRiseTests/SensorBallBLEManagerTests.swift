@@ -10,7 +10,7 @@ final class SensorBallBLEManagerTests: XCTestCase {
         XCTAssertFalse(SensorBallBLEManager.isBoxingDeviceName("Keyboard"))
     }
 
-    func testParsesTelemetryPacketWithProtocolForce() {
+    func testParsesTelemetryPacketWithRelativePowerScore() {
         let data = Data([0xD5, 0x5D, 0x03, 0x07, 88, 12, 11, 30, 100, 0, 0])
         let packets = SensorBallBLEManager.parseTelemetryPackets(data)
 
@@ -19,6 +19,6 @@ final class SensorBallBLEManagerTests: XCTestCase {
         XCTAssertEqual(packets[0].batteryRaw, 88)
         XCTAssertEqual(packets[0].hitCount, 12)
         XCTAssertEqual(packets[0].pressureHitCount, 11)
-        XCTAssertEqual(packets[0].forceN, 60)
+        XCTAssertEqual(packets[0].forceN, 100)
     }
 }

@@ -44,7 +44,7 @@ Please let us know if any additional information is required. Thank you.
 2. Launch the app and show the cloud training and leaderboard consent choice.
 3. Open Bluetooth settings in the app, start scanning, select the SENBALL# device, and show the connected state and battery reading.
 4. Select a training mode and start the countdown.
-5. Strike the physical accessory while keeping both the accessory and Apple device visible; show punch count and force data updating.
+5. Strike the physical accessory while keeping both the accessory and Apple device visible; show punch count and the unitless Relative Power Score updating. This score is the accessory's raw, uncalibrated sensor value and is not kg, kgf, or N.
 6. Finish the session and show the complete training report.
 7. If cloud consent was accepted, show history or leaderboard synchronization. Do not edit out the pairing or physical interaction steps.
 

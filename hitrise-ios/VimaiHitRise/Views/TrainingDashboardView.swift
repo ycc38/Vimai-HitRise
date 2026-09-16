@@ -303,23 +303,31 @@ struct TrainingDashboardView: View {
     private func homeForceCard(_ palette: HitRisePalette) -> some View {
         HitRiseCard(palette: palette, stroke: "#CDEFE8", fill: "#FFFFFF", padding: 16) {
             HStack {
-                HitRiseSectionTitle(title: "击打力度", subtitle: "实时力度曲线与峰值反馈", palette: palette)
-                Text("峰值 \(Int(app.training.peakForceN)) N")
+                HitRiseSectionTitle(
+                    title: app.localized("相对力量评分", "Relative Power Score", "Score de puissance relative", "คะแนนพลังสัมพัทธ์"),
+                    subtitle: app.localized("实时评分曲线与峰值反馈", "Live score curve and peak feedback", "Courbe du score et pic en direct", "กราฟคะแนนสดและค่าสูงสุด"),
+                    palette: palette
+                )
+                Text("\(app.localized("峰值评分", "Peak score", "Score max.", "คะแนนสูงสุด")) \(Int(app.training.peakForceN))")
                     .font(.caption.weight(.black))
                     .foregroundStyle(Color(hex: "#096D65"))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(Capsule().fill(Color(hex: "#DFFFF7")))
             }
-            ForceWaveformView(samples: app.training.forceSamples, palette: palette)
+            ForceWaveformView(
+                samples: app.training.forceSamples,
+                palette: palette,
+                emptyLabel: app.localized("等待相对力量评分", "Waiting for Relative Power Score", "En attente du score de puissance relative", "รอคะแนนพลังสัมพัทธ์")
+            )
                 .frame(height: 118)
             HStack(spacing: 8) {
-                forceLegend("轻击", "#45DCC8")
-                forceLegend("中击", "#9BE5C4")
-                forceLegend("重拳", "#FFD060")
-                forceLegend("爆发", "#FF7A45")
+                forceLegend(app.localized("轻击", "Light", "Léger", "เบา"), "#45DCC8")
+                forceLegend(app.localized("中击", "Medium", "Moyen", "กลาง"), "#9BE5C4")
+                forceLegend(app.localized("重拳", "Heavy", "Fort", "หนัก"), "#FFD060")
+                forceLegend(app.localized("爆发", "Burst", "Explosif", "ระเบิด"), "#FF7A45")
             }
-            Text("最新 \(Int(app.training.latestForceN)) N · 峰值 \(Int(app.training.peakForceN)) N · 平均 \(Int(app.training.averageForceN)) N")
+            Text("\(app.localized("最新", "Latest", "Dernier", "ล่าสุด")) \(Int(app.training.latestForceN)) · \(app.localized("峰值", "Peak", "Pic", "สูงสุด")) \(Int(app.training.peakForceN)) · \(app.localized("平均", "Average", "Moyenne", "เฉลี่ย")) \(Int(app.training.averageForceN))")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color(hex: palette.textSecondary))
         }
@@ -359,8 +367,8 @@ struct TrainingDashboardView: View {
                     .padding(.trailing, 48)
                 HStack(spacing: 8) {
                     homeMiniMetric("本次拳数", value: reportHitsText)
-                    homeMiniMetric("最大力度", value: reportPeakText)
-                    homeMiniMetric("平均力度", value: reportAverageText)
+                    homeMiniMetric(app.localized("峰值评分", "Peak score", "Score max.", "คะแนนสูงสุด"), value: reportPeakText)
+                    homeMiniMetric(app.localized("平均评分", "Average score", "Score moyen", "คะแนนเฉลี่ย"), value: reportAverageText)
                 }
                 .padding(.trailing, 28)
             }
@@ -486,8 +494,8 @@ struct TrainingDashboardView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     reportMetric("累计锻炼时间", durationText(report.durationSeconds), "#22C8BA")
                     reportMetric("累计击拳数", "\(report.totalHits) 次", "#22C8BA")
-                    reportMetric("最大力度", forceText(report.peakForceN), "#E85E58")
-                    reportMetric("平均力度", forceText(report.avgForceN), "#22C8BA")
+                    reportMetric(app.localized("相对力量峰值评分", "Peak Relative Power Score", "Score relatif max.", "คะแนนพลังสัมพัทธ์สูงสุด"), forceText(report.peakForceN), "#E85E58")
+                    reportMetric(app.localized("平均相对力量评分", "Average Relative Power Score", "Score relatif moyen", "คะแนนพลังสัมพัทธ์เฉลี่ย"), forceText(report.avgForceN), "#22C8BA")
                     reportMetric("消耗卡路里", "\(String(format: "%.1f", report.caloriesBurned)) kcal", "#78D98D")
                     reportMetric("等效燃脂", "\(String(format: "%.1f", report.fatBurnedGrams)) g", "#E5C859")
                     reportMetric("平均 BPM", "\(Int(report.avgBpm.rounded()))", "#56BFEA")
@@ -603,8 +611,8 @@ struct TrainingDashboardView: View {
 
     private var activeCalories: Double {
         if app.training.totalHits > 0 || !app.training.canStart {
-            let forceFactor = max(0.7, min(1.5, max(app.training.averageForceN, 260) / 420))
-            return Double(max(app.training.totalHits, 0)) * 0.063 * forceFactor
+            let powerFactor = max(0.7, min(1.5, max(app.training.averageForceN, 433.333) / 700))
+            return Double(max(app.training.totalHits, 0)) * 0.063 * powerFactor
         }
         return app.training.latestReport?.caloriesBurned ?? 0
     }
@@ -658,7 +666,12 @@ struct TrainingDashboardView: View {
     }
 
     private func shareText(_ report: TrainingReport) -> String {
-        "我刚完成智能拳击速度球训练战报：累计锻炼 \(durationText(report.durationSeconds))，累计击打 \(report.totalHits) 次，最大力度 \(forceText(report.peakForceN))，平均力度 \(forceText(report.avgForceN))，消耗 \(String(format: "%.1f", report.caloriesBurned)) kcal，等效燃脂约 \(String(format: "%.1f", report.fatBurnedGrams)) g。"
+        app.localized(
+            "我刚完成智能拳击速度球训练战报：累计锻炼 \(durationText(report.durationSeconds))，累计击打 \(report.totalHits) 次，相对力量峰值评分 \(forceText(report.peakForceN))，平均评分 \(forceText(report.avgForceN))，消耗 \(String(format: "%.1f", report.caloriesBurned)) kcal，等效燃脂约 \(String(format: "%.1f", report.fatBurnedGrams)) g。",
+            "I completed a smart boxing ball session: \(durationText(report.durationSeconds)), \(report.totalHits) punches, peak Relative Power Score \(forceText(report.peakForceN)), average score \(forceText(report.avgForceN)), \(String(format: "%.1f", report.caloriesBurned)) kcal, and about \(String(format: "%.1f", report.fatBurnedGrams)) g equivalent fat burn.",
+            "J'ai terminé une séance : \(durationText(report.durationSeconds)), \(report.totalHits) coups, score de puissance relative max. \(forceText(report.peakForceN)), score moyen \(forceText(report.avgForceN)), \(String(format: "%.1f", report.caloriesBurned)) kcal et environ \(String(format: "%.1f", report.fatBurnedGrams)) g de graisse équivalente.",
+            "ฉันฝึกชกมวยอัจฉริยะเสร็จแล้ว: \(durationText(report.durationSeconds)), \(report.totalHits) หมัด, คะแนนพลังสัมพัทธ์สูงสุด \(forceText(report.peakForceN)), คะแนนเฉลี่ย \(forceText(report.avgForceN)), \(String(format: "%.1f", report.caloriesBurned)) kcal และไขมันเทียบเท่าประมาณ \(String(format: "%.1f", report.fatBurnedGrams)) g"
+        )
     }
 
     private var connectionStatusText: String {
@@ -712,7 +725,7 @@ struct TrainingDashboardView: View {
     }
 
     private func forceText(_ value: Double) -> String {
-        "\(Int(value)) N"
+        "\(Int(value))"
     }
 
     private func durationText(_ seconds: Int) -> String {
@@ -849,13 +862,14 @@ struct CircularTimerRing: View {
 struct ForceWaveformView: View {
     let samples: [Double]
     let palette: HitRisePalette
+    let emptyLabel: String
 
     var body: some View {
         GeometryReader { proxy in
-            let maxValue = max(samples.max() ?? 120, 120)
+            let maxValue = max(samples.max() ?? 200, 200)
             HStack(alignment: .bottom, spacing: 3) {
                 if samples.isEmpty {
-                    Text("等待击打力度")
+                    Text(emptyLabel)
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color(hex: palette.textSecondary))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -877,8 +891,8 @@ struct ForceWaveformView: View {
     }
 
     private func forceColor(_ value: Double) -> Color {
-        if value > 160 { return Color(hex: palette.forceHigh) }
-        if value > 80 { return Color(hex: palette.forceMid) }
+        if value > 266.667 { return Color(hex: palette.forceHigh) }
+        if value > 133.333 { return Color(hex: palette.forceMid) }
         return Color(hex: palette.forceLow)
     }
 }

@@ -133,6 +133,7 @@ struct AchievementsHistoryView: View {
 }
 
 struct AchievementBadgeCard: View {
+    @EnvironmentObject private var app: AppViewModel
     let item: CloudAchievementItem
     let palette: HitRisePalette
 
@@ -165,14 +166,30 @@ struct AchievementBadgeCard: View {
     private var code: String {
         if item.key.contains("duration") { return "TIME" }
         if item.key.contains("hits") { return "HIT" }
-        if item.key.contains("force") { return "N" }
+        if item.key.contains("force") { return "RPS" }
         if item.key.contains("calories") { return "KCAL" }
         if item.key.contains("fat") { return "FAT" }
         return "ACH"
     }
 
     private var name: String {
-        item.key
+        if item.key.hasPrefix("peak_force_") {
+            return app.localized(
+                "相对力量峰值评分 \(item.goal)",
+                "Peak Relative Power Score \(item.goal)",
+                "Score relatif max. \(item.goal)",
+                "คะแนนพลังสัมพัทธ์สูงสุด \(item.goal)"
+            )
+        }
+        if item.key.hasPrefix("avg_force_") {
+            return app.localized(
+                "平均相对力量评分 \(item.goal)",
+                "Average Relative Power Score \(item.goal)",
+                "Score relatif moyen \(item.goal)",
+                "คะแนนพลังสัมพัทธ์เฉลี่ย \(item.goal)"
+            )
+        }
+        return item.key
             .replacingOccurrences(of: "_", with: " ")
             .uppercased()
     }
@@ -195,6 +212,7 @@ struct AchievementBadgeCard: View {
 }
 
 struct HistorySessionCard: View {
+    @EnvironmentObject private var app: AppViewModel
     let item: CloudTrainingHistoryItem
     let palette: HitRisePalette
 
@@ -217,7 +235,7 @@ struct HistorySessionCard: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color(hex: palette.textSecondary))
             }
-            Text("峰值 \(Int(item.peakForceN)) N | 平均 \(Int(item.avgForceN)) N | 节奏 \(Int(item.rhythmAccuracy * 100))%")
+            Text("\(app.localized("峰值评分", "Peak score", "Score max.", "คะแนนสูงสุด")) \(Int(item.peakForceN)) | \(app.localized("平均评分", "Average score", "Score moyen", "คะแนนเฉลี่ย")) \(Int(item.avgForceN)) | \(app.localized("节奏", "Rhythm", "Rythme", "จังหวะ")) \(Int(item.rhythmAccuracy * 100))%")
                 .font(.caption2)
                 .foregroundStyle(Color(hex: palette.textMuted))
         }
@@ -436,7 +454,13 @@ struct ProfileView: View {
             HitRiseMetricTile(title: "累计训练", value: "\(app.statistics?.totalSessions ?? 0)", unit: "次", palette: palette, accent: palette.accent)
             HitRiseMetricTile(title: "累计拳数", value: "\(app.statistics?.totalHits ?? 0)", unit: "拳", palette: palette, accent: palette.accentHot)
             HitRiseMetricTile(title: "最佳 30 秒", value: "\(app.statistics?.best30Hits ?? 0)", unit: "拳", palette: palette, accent: palette.success)
-            HitRiseMetricTile(title: "峰值力度", value: "\(Int(app.statistics?.bestPeakForceN ?? 0))", unit: "N", palette: palette, accent: palette.forceHigh)
+            HitRiseMetricTile(
+                title: app.localized("相对力量峰值评分", "Peak Relative Power Score", "Score relatif max.", "คะแนนพลังสัมพัทธ์สูงสุด"),
+                value: "\(Int(app.statistics?.bestPeakForceN ?? 0))",
+                unit: "",
+                palette: palette,
+                accent: palette.forceHigh
+            )
         }
     }
 

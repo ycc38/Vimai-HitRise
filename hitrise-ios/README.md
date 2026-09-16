@@ -17,7 +17,7 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 - CoreBluetooth BLE scan/connect/notify/write flow for `SENBALL#` devices.
 - Sensor packet parsing compatible with the Android `D5 5D 03` 11-byte telemetry packet.
 - Gyroscope/counting command compatible with Android `C5 5C 04 01/00`.
-- Training countdown, hit counting, force stats, calorie/fat estimates, and training report creation.
+- Training countdown, hit counting, unitless Relative Power Score statistics, calorie/fat estimates, and training report creation.
 - `URLSession` client for the existing FastAPI endpoints.
 - Local anonymous device profile using `UserDefaults` and SHA-256.
 - Bluetooth permission usage text, ATS HTTP exception for the current IP, and a minimal privacy manifest.

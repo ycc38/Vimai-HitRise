@@ -51,7 +51,7 @@ SUPPORTED_LEADERBOARD_KEYS = {
 HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 DEFAULT_BODY_WEIGHT_KG = 70.0
 BASE_BOXING_MET = 7.0
-FORCE_REFERENCE_N = 800.0
+RELATIVE_POWER_REFERENCE_SCORE = 1333.333
 MIN_DYNAMIC_MET = 4.0
 MAX_DYNAMIC_MET = 10.5
 KCAL_PER_FAT_GRAM = 7.7
@@ -120,8 +120,13 @@ def calories_for_training(total_hits: int, duration_seconds: int | float, avg_fo
     minutes = safe_duration_seconds / 60.0
     punches_per_minute = safe_hits / max(minutes, 1.0 / 60.0)
     frequency_factor = clamp(punches_per_minute / 60.0, 0.50, 1.60)
-    force_factor = clamp(math.sqrt(max(0.0, float(avg_force_n or 0.0)) / FORCE_REFERENCE_N), 0.70, 1.35)
-    intensity = 0.70 * frequency_factor + 0.30 * force_factor
+    # avg_force_n is a legacy API field name. It now carries the unitless Relative Power Score.
+    power_factor = clamp(
+        math.sqrt(max(0.0, float(avg_force_n or 0.0)) / RELATIVE_POWER_REFERENCE_SCORE),
+        0.70,
+        1.35,
+    )
+    intensity = 0.70 * frequency_factor + 0.30 * power_factor
     dynamic_met = clamp(BASE_BOXING_MET * intensity, MIN_DYNAMIC_MET, MAX_DYNAMIC_MET)
     calories = dynamic_met * 3.5 * DEFAULT_BODY_WEIGHT_KG / 200.0 * minutes
     return round(calories, 3)

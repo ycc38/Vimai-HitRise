@@ -1,6 +1,6 @@
 Accord utilisateur HitRise
-Version : V1.1
-Date d'effet : 2026-05-20
+Version : V1.2
+Date d'effet : 2026-09-16
 
 1. Champ d'application
 Le présent accord s'applique à l'application HitRise, aux fonctions de connexion Bluetooth pour les balles de vitesse connectées, aux entraînements cloud, succès, classements, profils, effets sonores et musiques de fond fournis par Shaoxing Weimai Technology Co., Ltd.
@@ -10,7 +10,7 @@ En téléchargeant, installant, ouvrant ou utilisant HitRise, vous confirmez avo
 2. Produit et services
 HitRise fournit notamment :
 1. le scan et la connexion des appareils Bluetooth SENBALL# ;
-2. la lecture du nombre de coups, de la batterie, de l'état de charge et de la force ;
+2. la lecture du nombre de coups, de la batterie, de l'état de charge et des données brutes du score de puissance relative ;
 3. un tableau de bord en temps réel, des rounds, un entraînement au tempo et des réglages ;
 4. des rapports, résumés de rounds, estimations de calories et de graisse brûlée ;
 5. des succès, badges, rangs, classements et profils ;
@@ -24,7 +24,9 @@ Utilisez HitRise dans un environnement sûr, ouvert et adapté à l'exercice. Av
 En cas de maladie, blessure, fatigue, vertige, gêne thoracique ou autre malaise, arrêtez immédiatement l'entraînement et demandez conseil si nécessaire. Les mineurs doivent utiliser l'application sous la supervision d'un parent ou tuteur.
 
 4. Bluetooth et données d'entraînement
-L'application reçoit les données de l'appareil SENBALL# par Bluetooth et affiche le nombre de coups, la force, la batterie et les statistiques de rounds. Les données peuvent varier selon l'état de l'appareil, la tolérance du capteur, le signal Bluetooth, la posture et l'environnement.
+L'application reçoit les données de l'appareil SENBALL# par Bluetooth et affiche le nombre de coups, le score de puissance relative, la batterie et les statistiques de rounds. Les données peuvent varier selon l'état de l'appareil, la tolérance du capteur, le signal Bluetooth, la posture et l'environnement.
+
+Le score de puissance relative correspond à la valeur brute du capteur transmise par le matériel compatible. Il n'a pas été étalonné avec un équipement standard de mesure de force, ne possède aucune unité physique et ne doit pas être interprété en kilogrammes (kg), kilogrammes-force (kgf) ou newtons (N). Il sert uniquement à des comparaisons relatives avec le même appareil dans des conditions similaires et ne doit pas être utilisé comme mesure réelle de force, certification de mesure ou résultat officiel de compétition.
 
 Les données HitRise servent au retour d'exercice, aux statistiques, aux succès et aux classements. Elles ne doivent pas être utilisées comme diagnostic médical, évaluation de rééducation, conseil nutritionnel ou jugement officiel de compétition.
 

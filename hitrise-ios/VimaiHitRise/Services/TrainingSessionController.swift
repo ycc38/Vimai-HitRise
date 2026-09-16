@@ -19,7 +19,7 @@ final class TrainingSessionController: ObservableObject {
     @Published private(set) var rhythmSummary = RhythmSummary()
     @Published private(set) var comboSummary: [String: Int] = [:]
     @Published private(set) var coachStatus: String = "待命"
-    @Published private(set) var coachMessage: String = "连接 SENBALL 后开始训练，我会根据节奏和力度给你提示。"
+    @Published private(set) var coachMessage: String = "连接 SENBALL 后开始训练，我会根据节奏和相对力量评分给你提示。"
     @Published private(set) var coachMeta: String = "AI 教练实时监听"
 
     private var punchEvents: [PunchEvent] = []
@@ -266,7 +266,7 @@ final class TrainingSessionController: ObservableObject {
         phase = completed ? .finished : .idle
         pushCoach(
             status: completed ? "完成" : "已停止",
-            message: "本次完成 \(totalHits) 拳，峰值 \(Int(peakForceN)) N。",
+            message: "本次完成 \(totalHits) 拳，相对力量峰值评分 \(Int(peakForceN))。",
             meta: "平均 \(String(format: "%.2f", frequency))/s | \(String(format: "%.1f", calories)) kcal"
         )
         return report
@@ -352,7 +352,7 @@ final class TrainingSessionController: ObservableObject {
                 comboSummary["sixteen_chain", default: 0] += 1
             }
         }
-        if forceN >= 180 {
+        if forceN >= 300 {
             comboSummary["heavy_hit", default: 0] += 1
         }
     }
@@ -360,8 +360,8 @@ final class TrainingSessionController: ObservableObject {
     private func evaluatePunchCoachCue(forceN: Double) {
         if totalHits > 0, totalHits.isMultiple(of: 20) {
             pushCoach(status: "节奏很好", message: "已经 \(totalHits) 拳，继续保持呼吸和脚步。", meta: "实时拳数提示")
-        } else if forceN >= max(120, peakForceN * 0.96) {
-            pushCoach(status: "重击", message: "这一拳很重，注意回弹后快速复位。", meta: "峰值 \(Int(forceN)) N")
+        } else if forceN >= max(200, peakForceN * 0.96) {
+            pushCoach(status: "重击", message: "这一拳的相对力量评分很高，注意回弹后快速复位。", meta: "峰值评分 \(Int(forceN))")
         }
     }
 
@@ -408,8 +408,9 @@ final class TrainingSessionController: ObservableObject {
         let minutes = max(Double(durationSeconds) / 60.0, 0.1)
         let hitLoad = Double(totalHits) * 0.022
         let timeLoad = minutes * 4.6
-        let forceBonus = min(max(avgForceN / 900.0, 0.0), 1.6) * Double(totalHits) * 0.006
-        return max(0, (hitLoad + timeLoad + forceBonus) * 0.62)
+        // avgForceN is a legacy model name. It carries the unitless Relative Power Score.
+        let powerBonus = min(max(avgForceN / 1500.0, 0.0), 1.6) * Double(totalHits) * 0.006
+        return max(0, (hitLoad + timeLoad + powerBonus) * 0.62)
     }
 }
 

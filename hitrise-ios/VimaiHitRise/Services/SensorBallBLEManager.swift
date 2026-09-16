@@ -177,9 +177,8 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         let pressureForceRaw = Int(bytes[index + 8])
         let forceLow = Int(bytes[index + 9])
         let forceHigh = Int(bytes[index + 10])
-        let protocolForceN = forceLow | (forceHigh << 8)
-        let rawForceN = protocolForceN > 0 ? protocolForceN : max(gyroForceRaw, pressureForceRaw)
-        let forceN = Int((Double(rawForceN) * Constants.sensorForceScale).rounded())
+        let protocolPowerScore = forceLow | (forceHigh << 8)
+        let relativePowerScore = protocolPowerScore > 0 ? protocolPowerScore : max(gyroForceRaw, pressureForceRaw)
         return SensorBallTelemetry(
             packetIndex: Int(bytes[index + 3]),
             batteryRaw: Int(bytes[index + 4]),
@@ -189,7 +188,9 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
             pressureForceRaw: pressureForceRaw,
             forceLow: forceLow,
             forceHigh: forceHigh,
-            forceN: forceN
+            // Legacy property name retained for cloud payload compatibility. This value is the
+            // unitless Relative Power Score reported directly by the hardware.
+            forceN: relativePowerScore
         )
     }
 
@@ -342,7 +343,6 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         static let devicePrefix = "SENBALL#"
         static let sensorBallServiceUUIDs = ["FFE0", "0000FFE0-0000-1000-8000-00805F9B34FB"]
         static let telemetryPacketSize = 11
-        static let sensorForceScale = 0.6
     }
 }
 

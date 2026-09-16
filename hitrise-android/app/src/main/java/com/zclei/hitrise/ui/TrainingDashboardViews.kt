@@ -107,7 +107,7 @@ class PunchWaveformView @JvmOverloads constructor(
     private val values = ArrayDeque<Float>()
     private var latestForce = 0f
     private var peakForce = 0f
-    private var emptyLabel = "Waiting for punch force"
+    private var emptyLabel = "Waiting for Relative Power Score"
     private var latestLabel = "Latest"
     private var peakLabel = "Peak"
     private var lowForceColor = LOW_FORCE_COLOR
@@ -202,7 +202,7 @@ class PunchWaveformView @JvmOverloads constructor(
             previousForce = force
         }
         labelPaint.textSize = min(w, h) * 0.15f
-        canvas.drawText("$latestLabel ${latestForce.roundToInt()} N   $peakLabel ${peakForce.roundToInt()} N", 10f, labelPaint.textSize + 6f, labelPaint)
+        canvas.drawText("$latestLabel ${latestForce.roundToInt()}   $peakLabel ${peakForce.roundToInt()}", 10f, labelPaint.textSize + 6f, labelPaint)
     }
 
     private companion object {
@@ -217,7 +217,7 @@ class PunchWaveformView @JvmOverloads constructor(
             if (maxForce > minForce) {
                 (force - minForce) / (maxForce - minForce)
             } else {
-                (force / 120f).coerceIn(0f, 1f)
+                (force / 200f).coerceIn(0f, 1f)
             }
         return if (normalized <= 0.5f) {
             blendColor(lowForceColor, midForceColor, normalized / 0.5f)
