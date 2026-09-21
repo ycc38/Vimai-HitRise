@@ -431,7 +431,7 @@ final class AppViewModel: NSObject, ObservableObject {
     private func startMetronomeIfNeeded() {
         stopMetronome()
         guard training.selectedSetup.rhythmMode == .rhythm else { return }
-        let bpm = training.selectedSetup.bpm.clamped(to: 100...300)
+        let bpm = min(300, max(100, training.selectedSetup.bpm))
         prepareMetronomeAudioIfNeeded()
         playMetronomeBeat()
         let timer = Timer(timeInterval: 60.0 / Double(bpm), repeats: true) { [weak self] _ in
