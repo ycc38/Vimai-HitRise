@@ -3,10 +3,12 @@ import XCTest
 
 final class SensorBallBLEManagerTests: XCTestCase {
     func testMatchesSenballNamesUsedByAdvertisements() {
-        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName("SENBALL#A"))
-        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName("senball#A-01B"))
-        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName("SENBALL#1"))
-        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName("SENBALL"))
+        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName("SENBALL#00000G"))
+        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName("SENBALL#A1B2C"))
+        XCTAssertTrue(SensorBallBLEManager.isBoxingDeviceName(" senball#A-01B "))
+        XCTAssertFalse(SensorBallBLEManager.isBoxingDeviceName("SENBALL#000001"))
+        XCTAssertFalse(SensorBallBLEManager.isBoxingDeviceName("BOXING#00000G"))
+        XCTAssertFalse(SensorBallBLEManager.isBoxingDeviceName("SENBALL"))
         XCTAssertFalse(SensorBallBLEManager.isBoxingDeviceName("Keyboard"))
     }
 

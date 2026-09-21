@@ -1,6 +1,6 @@
 Politique de confidentialité HitRise
-Version : V1.2
-Date d'effet : 2026-09-16
+Version : V1.3
+Date d'effet : 2026-09-21
 
 1. Introduction
 Bienvenue dans HitRise. HitRise est une application d'entraînement avec balle de vitesse connectée, fournie par Shaoxing Weimai Technology Co., Ltd. Elle se connecte aux appareils Bluetooth SENBALL#, enregistre les données d'entraînement, génère des rapports, et propose résultats, classements, profil, effets sonores et musique de fond.
@@ -8,7 +8,7 @@ Bienvenue dans HitRise. HitRise est une application d'entraînement avec balle d
 La présente politique explique comment nous collectons, utilisons, stockons, protégeons et traitons les informations lorsque vous utilisez HitRise. Veuillez la lire attentivement avant d'utiliser l'application.
 
 2. Informations collectées et utilisées
-Profil local et identifiant. L'application peut générer un identifiant local, un code de synchronisation, un résumé d'appareil et un état d'activation local afin de fournir la synchronisation cloud, le profil, les succès et les classements. Vous pouvez définir un pseudo, un avatar, une région et une langue.
+Profil local et identifiant. L'application peut générer un identifiant utilisateur local anonyme, un code de synchronisation et un résumé d'appareil afin de fournir la synchronisation cloud, le profil, les succès et les classements. Le produit ne possède ni numéro de série produit ni code d'activation ; l'application ne vous demande pas ces informations et ne lit aucun numéro de série matériel du téléphone ou de l'appareil de boxe. Vous pouvez définir un pseudo, un avatar, une région et une langue.
 
 Informations Bluetooth. Pour connecter l'appareil de boxe, l'application utilise le scan, la connexion et la communication Bluetooth. Nous traitons le nom de l'appareil, l'adresse, l'état de connexion, la batterie, l'état de charge, le nombre de coups, les données brutes du score de puissance relative et les messages d'état Bluetooth. Le scan filtre les appareils SENBALL#.
 

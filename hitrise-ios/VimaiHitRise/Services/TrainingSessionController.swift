@@ -68,7 +68,7 @@ final class TrainingSessionController: ObservableObject {
             restHalfMinutes: setup.restHalfMinutes.clamped(to: 0...10),
             rounds: setup.rounds.clamped(to: 1...10),
             rhythmMode: setup.rhythmMode,
-            bpm: setup.bpm.clamped(to: 40...140)
+            bpm: setup.bpm.clamped(to: 100...300)
         )
         remainingSeconds = roundConfig(for: selectedPlayMode, setup: selectedSetup).workSeconds
     }
@@ -89,7 +89,7 @@ final class TrainingSessionController: ObservableObject {
             restHalfMinutes: setup.restHalfMinutes.clamped(to: 0...10),
             rounds: setup.rounds.clamped(to: 1...10),
             rhythmMode: setup.rhythmMode,
-            bpm: setup.bpm.clamped(to: 40...140)
+            bpm: setup.bpm.clamped(to: 100...300)
         )
         selectedPlayMode = playMode
         selectedMode = playMode.baseMode
@@ -324,7 +324,7 @@ final class TrainingSessionController: ObservableObject {
 
     private func scoreBeat(at date: Date) -> BeatScore? {
         guard selectedSetup.rhythmMode == .rhythm, let start = currentRoundStart else { return nil }
-        let beatInterval = 60.0 / Double(max(40, selectedSetup.bpm))
+        let beatInterval = 60.0 / Double(selectedSetup.bpm.clamped(to: 100...300))
         let elapsed = date.timeIntervalSince(start)
         guard elapsed > 0.22 else { return nil }
         let nearestBeat = round(elapsed / beatInterval) * beatInterval

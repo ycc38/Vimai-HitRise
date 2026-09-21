@@ -85,6 +85,20 @@ def set_width(cell, width_cm):
     width.set(qn("w:type"), "dxa")
 
 
+def keep_row_together(row):
+    tr_pr = row._tr.get_or_add_trPr()
+    if tr_pr.find(qn("w:cantSplit")) is None:
+        tr_pr.append(OxmlElement("w:cantSplit"))
+
+
+def repeat_table_header(row):
+    tr_pr = row._tr.get_or_add_trPr()
+    if tr_pr.find(qn("w:tblHeader")) is None:
+        header = OxmlElement("w:tblHeader")
+        header.set(qn("w:val"), "true")
+        tr_pr.append(header)
+
+
 def set_run_font(run, size=None, bold=None, color=None, font="Microsoft YaHei"):
     run.font.name = font
     run._element.rPr.rFonts.set(qn("w:eastAsia"), font)
@@ -122,6 +136,7 @@ def add_h1(doc, text):
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(10)
     p.paragraph_format.space_after = Pt(8)
+    p.paragraph_format.keep_with_next = True
     add_run(p, text, size=20, bold=True, color=ACCENT_DARK)
     return p
 
@@ -130,6 +145,7 @@ def add_h2(doc, text):
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(8)
     p.paragraph_format.space_after = Pt(5)
+    p.paragraph_format.keep_with_next = True
     add_run(p, text, size=14.5, bold=True, color=ACCENT_DARK)
     return p
 
@@ -138,6 +154,7 @@ def add_h3(doc, text):
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(5)
     p.paragraph_format.space_after = Pt(3)
+    p.paragraph_format.keep_with_next = True
     add_run(p, text, size=11.5, bold=True, color=BLUE)
     return p
 
@@ -161,6 +178,7 @@ def add_numbered(doc, items):
 def add_callout(doc, title, body, fill=ACCENT_SOFT, border=ACCENT):
     table = doc.add_table(rows=1, cols=1)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    keep_row_together(table.rows[0])
     cell = table.cell(0, 0)
     set_cell_shading(cell, fill)
     set_cell_border(cell, border, "10")
@@ -175,29 +193,34 @@ def add_callout(doc, title, body, fill=ACCENT_SOFT, border=ACCENT):
     return table
 
 
-def add_info_table(doc, rows, widths=None, header_fill=ACCENT_DARK):
+def add_info_table(doc, rows, widths=None, header_fill=ACCENT_DARK, vertical_margin=120):
     table = doc.add_table(rows=1, cols=len(rows[0]))
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     table.style = "Table Grid"
+    keep_row_together(table.rows[0])
+    repeat_table_header(table.rows[0])
     hdr = table.rows[0].cells
     for idx, text in enumerate(rows[0]):
         if widths:
             set_width(hdr[idx], widths[idx])
         set_cell_shading(hdr[idx], header_fill)
         set_cell_border(hdr[idx], "C9D4DA")
-        set_cell_margins(hdr[idx], 130, 130, 130, 130)
+        header_margin = vertical_margin + 10
+        set_cell_margins(hdr[idx], header_margin, 130, header_margin, 130)
         hdr[idx].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
         p = hdr[idx].paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         add_run(p, text, size=9.7, bold=True, color="FFFFFF")
     for row_data in rows[1:]:
-        cells = table.add_row().cells
+        row = table.add_row()
+        keep_row_together(row)
+        cells = row.cells
         for idx, text in enumerate(row_data):
             if widths:
                 set_width(cells[idx], widths[idx])
             set_cell_shading(cells[idx], "FFFFFF")
             set_cell_border(cells[idx], "D6DEE4")
-            set_cell_margins(cells[idx], 120, 130, 120, 130)
+            set_cell_margins(cells[idx], vertical_margin, 130, vertical_margin, 130)
             cells[idx].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             p = cells[idx].paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT if idx != 0 else WD_ALIGN_PARAGRAPH.CENTER
@@ -225,7 +248,7 @@ def setup_document():
     section = doc.sections[0]
     section.page_width = Cm(21)
     section.page_height = Cm(29.7)
-    section.top_margin = Cm(1.8)
+    section.top_margin = Cm(2.2)
     section.bottom_margin = Cm(1.8)
     section.left_margin = Cm(1.7)
     section.right_margin = Cm(1.7)
@@ -267,9 +290,9 @@ def add_cover(doc):
         ["项目", "说明"],
         ["APP 显示名称", "HitRise"],
         ["设备名称前缀", "SENBALL#"],
-        ["产品码", "HTR01"],
-        ["手册版本", "1.1"],
-        ["手册日期", "2026-09-16"],
+        ["产品认证", "无需产品序列号或激活码"],
+        ["手册版本", "1.2"],
+        ["手册日期", "2026-09-21"],
     ]
     add_info_table(doc, rows, widths=[4.3, 10.4], header_fill=ACCENT_DARK)
 
@@ -309,6 +332,7 @@ def build_manual():
 
     add_h1(doc, "1. 产品简介与适用范围")
     add_body(doc, "HitRise 是一款配合智能拳击速度球使用的 Android 与 iOS 训练 APP。APP 通过蓝牙连接 SENBALL# 设备，读取拳击次数、电量、充电状态和相对力量评分，并提供实时训练、回合战报、锻炼成果、榜单排名、个人中心、音效和背景音乐等功能。")
+    add_callout(doc, "无需产品激活", "产品不设置产品序列号或激活码，HitRise 不会要求用户输入此类信息。云端资料使用 APP 自动生成的匿名用户标识，不影响本地训练。")
     add_callout(doc, "当前计数方式", "当前版本的拳击次数来自智能拳击球蓝牙协议中的“数据2”，不使用手机麦克风或声音识别计数。")
     add_h2(doc, "主要功能")
     add_bullets(doc, [
@@ -397,10 +421,11 @@ def build_manual():
         ["休息时长", "0-5 分钟，30 秒步进", "每两个训练回合之间的休息时间。"],
         ["回合数", "1-10 回合", "本次训练的总回合数。"],
         ["训练方式", "自由模式 / 跟拍模式", "自由模式不计算节拍分；跟拍模式启用 Perfect/Good/Miss。"],
-        ["BPM", "40-140，5 BPM 步进", "跟拍模式下用于节拍评分和训练律动。"],
+        ["BPM", "100-300，默认 100，5 BPM 步进", "保存值同时用于节拍评分和实际鼓点播放。"],
     ], widths=[3.1, 4.3, 7.4])
     add_h2(doc, "节拍评分")
     add_bullets(doc, [
+        "BPM 默认值为 100（热身节奏），最高可设为 300（极限节奏）；保存后显示值、评分节拍和鼓点播放速度保持一致。",
         "Perfect：击打接近节拍点，约在 ±100ms 范围内。",
         "Good：击打在较宽容的节拍窗口内，约在 ±200ms 范围内。",
         "Miss：节拍窗口内未识别到击打。",
@@ -415,6 +440,7 @@ def build_manual():
         "训练中若不希望播放音乐，请保持背景音乐为“无背景音乐”。",
     ])
 
+    doc.add_page_break()
     add_h1(doc, "6. 训练结束、回合战报与云同步")
     add_h2(doc, "训练战报内容")
     add_info_table(doc, [
@@ -451,7 +477,7 @@ def build_manual():
     ], widths=[4.2, 10.6])
     add_h2(doc, "个人中心")
     add_bullets(doc, [
-        "查看昵称、头像、地区、语言和训练概览。",
+        "查看昵称、头像、地区、语言、匿名用户编号和训练概览；匿名用户编号不是产品序列号。",
         "查看隐私政策和用户协议。",
         "通过云端同步展示个人训练总览、段位与成长进度。",
         "头像、昵称等资料可能在榜单或分享内容中显示，请按个人需要设置。",
@@ -485,11 +511,12 @@ def build_manual():
         ["扫描不到设备", "确认设备开机、名称为 SENBALL# 开头且末位为英文字母；打开手机蓝牙和权限；靠近后重新扫描。"],
         ["出现蓝牙配对请求", "HitRise 使用免配对 BLE 连接。若系统弹窗出现，请取消；APP 会尝试阻止 SENBALL# 进入配对流程。"],
         ["训练中蓝牙断开", "保持手机靠近设备；等待 APP 自动重连；若长时间未恢复，结束训练后重启蓝牙和设备再连接。"],
+        ["倒计时语音与画面不一致", "请更新到最新版本；新版本会按触发时的实际剩余秒数播报。"],
         ["第 2 回合无法训练", "请将 HitRise 更新到最新版本。新版本已优化休息后重新开启计数的蓝牙写入顺序。"],
         ["电量不显示", "连接后等待设备上报；若仍不显示，断开后重新连接。"],
         ["榜单未刷新", "检查网络连接，稍后下拉刷新或重新打开 APP。"],
         ["音效或音乐不播放", "确认设置中已选择音效或背景音乐，手机媒体音量不为 0。"],
-    ], widths=[4.0, 10.8])
+    ], widths=[4.0, 10.8], vertical_margin=80)
 
     add_callout(
         doc,

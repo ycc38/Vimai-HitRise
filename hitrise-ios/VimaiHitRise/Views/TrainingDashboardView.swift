@@ -919,7 +919,7 @@ struct TrainingSetupView: View {
                                 }
                             }
                             .pickerStyle(.segmented)
-                            stepperRow("BPM", value: $setup.bpm, range: 40...140, suffix: "bpm")
+                            stepperRow("BPM", value: $setup.bpm, range: 100...300, suffix: "bpm")
                         }
                         HitRiseActionButton(title: "保存训练设置", systemImage: "checkmark", palette: palette, fill: palette.accentHot) {
                             app.updateTrainingSetup(setup)

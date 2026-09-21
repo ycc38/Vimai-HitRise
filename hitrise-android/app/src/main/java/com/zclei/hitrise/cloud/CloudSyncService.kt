@@ -568,7 +568,7 @@ class CloudSyncService(
     }
 
     companion object {
-        const val DEFAULT_BASE_URL = "http://152.136.62.157/hitrise"
+        const val DEFAULT_BASE_URL = "https://hitrise.wavemill.cn/hitrise"
         const val NETWORK_REASON = "network_error"
         private const val CONNECT_TIMEOUT_MS = 6_000
         private const val READ_TIMEOUT_MS = 8_000

@@ -1,6 +1,6 @@
 HitRise Privacy Policy
-Version: V1.2
-Effective Date: 2026-09-16
+Version: V1.3
+Effective Date: 2026-09-21
 
 1. Introduction
 Welcome to HitRise. HitRise is a smart boxing speed-ball training app provided by Shaoxing Weimai Technology Co., Ltd. It connects to SENBALL# Bluetooth devices, records training data, generates training reports, and provides achievements, leaderboards, profile features, sound effects, and background music settings.
@@ -8,7 +8,7 @@ Welcome to HitRise. HitRise is a smart boxing speed-ball training app provided b
 This Privacy Policy explains how we collect, use, store, protect, and process information when you use HitRise. Please read it carefully before using the app.
 
 2. Information We Collect and Use
-Device profile and local identity. The app may generate a local user identifier, sync code, device summary, and local activation status to support cloud sync, profile features, achievements, and leaderboards. You may set a nickname, avatar, region code, and app language.
+Device profile and local identity. The app may generate an anonymous local user identifier, sync code, and device summary to support cloud sync, profile features, achievements, and leaderboards. The product has no product serial number or activation code, the app does not ask you to provide either, and it does not read a hardware serial number from the phone or boxing device. You may set a nickname, avatar, region code, and app language.
 
 Bluetooth device information. To connect the boxing device, the app uses Bluetooth scanning, connection, and communication features. We process Bluetooth device name, device address, connection status, battery level, charging status, punch count, raw Relative Power Score data, and Bluetooth status messages. The scan filters SENBALL# devices.
 

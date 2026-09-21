@@ -46,6 +46,10 @@ final class AppViewModel: NSObject, ObservableObject {
     private var previewPlayer: AVPlayer?
     private var effectPlayer: AVPlayer?
     private var backgroundPlayer: AVPlayer?
+    private let metronomeEngine = AVAudioEngine()
+    private let metronomeNode = AVAudioPlayerNode()
+    private var metronomeBuffer: AVAudioPCMBuffer?
+    private var metronomeTimer: Timer?
     private var lastTelemetryHitCounter: Int?
     private let defaults = UserDefaults.standard
 
@@ -104,6 +108,7 @@ final class AppViewModel: NSObject, ObservableObject {
         enforceFixedAppearanceAndAudioPreferences()
         wireObjectChanges()
         wireCoachSpeech()
+        wireMetronome()
     }
 
     func bootstrap() async {
@@ -407,6 +412,73 @@ final class AppViewModel: NSObject, ObservableObject {
                 self?.speakCoach(message)
             }
             .store(in: &cancellables)
+    }
+
+    private func wireMetronome() {
+        training.$phase
+            .receive(on: RunLoop.main)
+            .sink { [weak self] phase in
+                guard let self else { return }
+                if case .running = phase {
+                    startMetronomeIfNeeded()
+                } else {
+                    stopMetronome()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func startMetronomeIfNeeded() {
+        stopMetronome()
+        guard training.selectedSetup.rhythmMode == .rhythm else { return }
+        let bpm = training.selectedSetup.bpm.clamped(to: 100...300)
+        prepareMetronomeAudioIfNeeded()
+        playMetronomeBeat()
+        let timer = Timer(timeInterval: 60.0 / Double(bpm), repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.playMetronomeBeat()
+            }
+        }
+        metronomeTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func prepareMetronomeAudioIfNeeded() {
+        if metronomeBuffer == nil {
+            let sampleRate = 44_100.0
+            let frameCount = AVAudioFrameCount(sampleRate * 0.045)
+            guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
+                  let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
+                  let samples = buffer.floatChannelData?[0] else {
+                return
+            }
+            buffer.frameLength = frameCount
+            for index in 0..<Int(frameCount) {
+                let time = Double(index) / sampleRate
+                samples[index] = Float(sin(2.0 * .pi * 920.0 * time) * exp(-70.0 * time) * 0.34)
+            }
+            metronomeEngine.attach(metronomeNode)
+            metronomeEngine.connect(metronomeNode, to: metronomeEngine.mainMixerNode, format: format)
+            metronomeBuffer = buffer
+        }
+        if !metronomeEngine.isRunning {
+            metronomeEngine.prepare()
+            try? metronomeEngine.start()
+        }
+    }
+
+    private func playMetronomeBeat() {
+        guard let metronomeBuffer, metronomeEngine.isRunning else { return }
+        metronomeNode.scheduleBuffer(metronomeBuffer, at: nil, options: .interrupts)
+        if !metronomeNode.isPlaying {
+            metronomeNode.play()
+        }
+    }
+
+    private func stopMetronome() {
+        metronomeTimer?.invalidate()
+        metronomeTimer = nil
+        metronomeNode.stop()
     }
 
     private func speakCoach(_ message: String) {

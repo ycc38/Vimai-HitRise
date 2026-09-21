@@ -21,7 +21,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>HITRISE_API_BASE_URL</key>
-	<string>https://hitrise.86086.cn/hitrise</string>
+	<string>https://hitrise.wavemill.cn/hitrise</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>

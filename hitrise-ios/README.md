@@ -7,7 +7,7 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 - Display name: `Vimai HitRise`
 - Chinese subtitle: `立式拳击速度球`
 - Bundle ID: `com.zclei.hitrise`
-- API base URL: `https://hitrise.86086.cn/hitrise`
+- API base URL: `https://hitrise.wavemill.cn/hitrise`
 - Preferred future domain: `https://api.vimaihitrise.com/hitrise`
 - Fallback future domain: `https://api.vimai-hitrise.com/hitrise`
 
@@ -33,6 +33,6 @@ Native SwiftUI iOS client for the Vimai HitRise standing boxing speed ball.
 
 ## App Store Notes
 
-The project now uses the production HTTPS endpoint `https://hitrise.86086.cn/hitrise`, so the early HTTP/IP ATS exception has been removed.
+The project now uses the production HTTPS endpoint `https://hitrise.wavemill.cn/hitrise`, so the early HTTP/IP ATS exception has been removed.
 
 The App Store name and `CFBundleDisplayName` / `CFBundleName` must remain `Vimai HitRise`; the bundle identifier remains `com.zclei.hitrise`. Codemagic checks the exported IPA identity and primary AppIcon before publishing to TestFlight. Its project build number overrides the local build number (26). Select the newly uploaded build in App Store Connect when resubmitting; changing source files does not update an already uploaded build.

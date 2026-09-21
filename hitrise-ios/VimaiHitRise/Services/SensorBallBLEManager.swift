@@ -16,6 +16,10 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     private var pendingGyroCommand: Bool?
     private var writeInFlight = false
     private var notifiedCharacteristicKeys = Set<String>()
+    private let defaults = UserDefaults.standard
+    private var isAutoReconnectScan = false
+    private var autoReconnectAttempted = false
+    private var autoReconnectFailureCount = 0
 
     override init() {
         super.init()
@@ -34,6 +38,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         devices.removeAll()
         peripherals.removeAll()
         lastScanDebugText = ""
+        isAutoReconnectScan = false
         central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
         statusMessage = "正在扫描附近 BLE 设备..."
     }
@@ -100,20 +105,19 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
 
     private func addOrUpdate(peripheral: CBPeripheral, rssi: NSNumber, advertisementData: [String: Any]) {
         let names = SensorBallBLEManager.nameCandidates(from: advertisementData, peripheralName: peripheral.name)
-        let matchedName = names.first(where: SensorBallBLEManager.isBoxingDeviceName)
-        let hasCompatibleAdvertisement = SensorBallBLEManager.hasCompatibleSerialAdvertisement(advertisementData)
-        let isLikelySensorBall = matchedName != nil || hasCompatibleAdvertisement
+        guard let matchedName = names.first(where: SensorBallBLEManager.isBoxingDeviceName) else {
+            return
+        }
         peripherals[peripheral.identifier] = peripheral
-        let name = matchedName ?? names.first ?? SensorBallBLEManager.fallbackDisplayName(for: peripheral)
         let item = SensorBallDeviceInfo(
             id: peripheral.identifier,
-            name: name,
+            name: matchedName,
             rssi: rssi.intValue,
-            isLikelySensorBall: isLikelySensorBall,
+            isLikelySensorBall: true,
             detail: SensorBallBLEManager.discoveryDetail(
                 names: names,
                 advertisementData: advertisementData,
-                isLikelySensorBall: isLikelySensorBall
+                isLikelySensorBall: true
             )
         )
         if let index = devices.firstIndex(where: { $0.id == item.id }) {
@@ -121,11 +125,11 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         } else {
             devices.append(item)
         }
-        devices.sort {
-            if $0.isLikelySensorBall != $1.isLikelySensorBall {
-                return $0.isLikelySensorBall && !$1.isLikelySensorBall
-            }
-            return $0.rssi > $1.rssi
+        devices.sort { $0.rssi > $1.rssi }
+
+        if isAutoReconnectScan, matchesSavedDevice(item) {
+            isAutoReconnectScan = false
+            connect(to: item)
         }
     }
 
@@ -209,11 +213,12 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
 
     static func isBoxingDeviceName(_ name: String) -> Bool {
         let normalized = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalized.isEmpty,
-              normalized.range(of: Constants.deviceBrand, options: [.caseInsensitive]) != nil else {
+        guard normalized.range(of: Constants.devicePrefix, options: [.anchored, .caseInsensitive]) != nil,
+              normalized.count > Constants.devicePrefix.count,
+              let lastScalar = normalized.unicodeScalars.last else {
             return false
         }
-        return true
+        return (65...90).contains(Int(lastScalar.value)) || (97...122).contains(Int(lastScalar.value))
     }
 
     private static func nameCandidates(from advertisementData: [String: Any], peripheralName: String?) -> [String] {
@@ -254,7 +259,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     }
 
     private static func extractBoxingName(from text: String) -> String? {
-        guard let range = text.range(of: Constants.deviceBrand, options: .caseInsensitive) else {
+        guard let range = text.range(of: Constants.devicePrefix, options: .caseInsensitive) else {
             return nil
         }
         var end = range.lowerBound
@@ -276,15 +281,6 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
             character == "#" ||
             character == "_" ||
             character == "-"
-    }
-
-    private static func hasCompatibleSerialAdvertisement(_ advertisementData: [String: Any]) -> Bool {
-        let uuids = advertisedServiceUUIDObjects(from: advertisementData)
-        if uuids.contains(where: { isCompatibleSerialUUID($0) }) { return true }
-        if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] {
-            return serviceData.values.contains(where: { extractBoxingName(from: $0) != nil })
-        }
-        return false
     }
 
     private static func discoveryDetail(
@@ -324,25 +320,60 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         return uuids
     }
 
-    private static func isCompatibleSerialUUID(_ uuid: CBUUID) -> Bool {
-        let text = uuid.uuidString.uppercased()
-        return Constants.sensorBallServiceUUIDs.contains(text) ||
-            text.contains("FFE0") ||
-            text.contains("FFE1") ||
-            text.contains("FFE4") ||
-            text.contains("FFE5") ||
-            text.contains("FFE9")
+    private func reconnectLastDevice() {
+        guard !autoReconnectAttempted,
+              connectedDevice == nil,
+              let identifierText = defaults.string(forKey: Constants.lastDeviceIdentifierKey),
+              let identifier = UUID(uuidString: identifierText) else {
+            return
+        }
+        autoReconnectAttempted = true
+        if let peripheral = central.retrievePeripherals(withIdentifiers: [identifier]).first {
+            let name = defaults.string(forKey: Constants.lastDeviceNameKey) ?? peripheral.name ?? Constants.devicePrefix
+            guard SensorBallBLEManager.isBoxingDeviceName(name) else {
+                startAutoReconnectScan()
+                return
+            }
+            peripherals[identifier] = peripheral
+            let item = SensorBallDeviceInfo(id: identifier, name: name, rssi: 0)
+            devices = [item]
+            connect(to: item)
+        } else {
+            startAutoReconnectScan()
+        }
     }
 
-    private static func fallbackDisplayName(for peripheral: CBPeripheral) -> String {
-        "SENBALL BLE \(peripheral.identifier.uuidString.prefix(4))"
+    private func startAutoReconnectScan() {
+        guard central.state == .poweredOn,
+              autoReconnectFailureCount < Constants.maxAutoReconnectFailures,
+              (defaults.string(forKey: Constants.lastDeviceIdentifierKey) != nil ||
+                defaults.string(forKey: Constants.lastDeviceNameKey) != nil) else {
+            return
+        }
+        isAutoReconnectScan = true
+        central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
+        statusMessage = "正在查找上次连接的设备..."
+    }
+
+    private func matchesSavedDevice(_ device: SensorBallDeviceInfo) -> Bool {
+        if defaults.string(forKey: Constants.lastDeviceIdentifierKey) == device.id.uuidString {
+            return true
+        }
+        guard let savedName = defaults.string(forKey: Constants.lastDeviceNameKey) else { return false }
+        return savedName.compare(device.name, options: .caseInsensitive) == .orderedSame
+    }
+
+    private func rememberConnectedDevice(_ device: SensorBallDeviceInfo) {
+        defaults.set(device.id.uuidString, forKey: Constants.lastDeviceIdentifierKey)
+        defaults.set(device.name, forKey: Constants.lastDeviceNameKey)
     }
 
     private enum Constants {
-        static let deviceBrand = "SENBALL"
         static let devicePrefix = "SENBALL#"
-        static let sensorBallServiceUUIDs = ["FFE0", "0000FFE0-0000-1000-8000-00805F9B34FB"]
         static let telemetryPacketSize = 11
+        static let lastDeviceIdentifierKey = "hitrise.bluetooth.last.identifier"
+        static let lastDeviceNameKey = "hitrise.bluetooth.last.name"
+        static let maxAutoReconnectFailures = 2
     }
 }
 
@@ -352,6 +383,7 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
         switch central.state {
         case .poweredOn:
             statusMessage = "蓝牙已开启"
+            reconnectLastDevice()
         case .poweredOff:
             statusMessage = "蓝牙已关闭"
         case .unauthorized:
@@ -382,6 +414,11 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
         peripheral.delegate = self
         connectedDevice = devices.first(where: { $0.id == peripheral.identifier })
             ?? SensorBallDeviceInfo(id: peripheral.identifier, name: peripheral.name ?? "SENBALL", rssi: 0)
+        if let connectedDevice, SensorBallBLEManager.isBoxingDeviceName(connectedDevice.name) {
+            rememberConnectedDevice(connectedDevice)
+        }
+        isAutoReconnectScan = false
+        autoReconnectFailureCount = 0
         statusMessage = "已连接，正在发现服务..."
         peripheral.discoverServices(nil)
     }
@@ -389,6 +426,8 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         statusMessage = "连接失败：\(error?.localizedDescription ?? "未知错误")"
         connectedDevice = nil
+        autoReconnectFailureCount += 1
+        startAutoReconnectScan()
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {

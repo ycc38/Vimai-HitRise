@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity() {
         val restHalfMinutes: Int = 1,
         val rounds: Int = 3,
         val rhythmMode: TrainingRhythmMode = TrainingRhythmMode.Rhythm,
-        val bpm: Int = 80,
+        val bpm: Int = 100,
     ) {
         val workSeconds: Int
             get() = workMinutes * 60
@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedMode: TrainingMode = TrainingMode.Seconds30
     private var selectedPlayMode: TrainingPlayMode = TrainingPlayMode.Classic30
     private var selectedRhythmMode: TrainingRhythmMode = TrainingRhythmMode.Rhythm
-    private var selectedBeatBpm: Int = 80
+    private var selectedBeatBpm: Int = 100
     private var selectedSoundPack: SoundPack = SoundPack.Gym
     private var trainingSessionSetup = TrainingSessionSetup()
     private var lastCoachMessage: String? = null
@@ -461,11 +461,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var musicImmersionCard: LinearLayout
     private lateinit var rhythmFreeButton: RadioButton
     private lateinit var rhythmBeatButton: RadioButton
-    private lateinit var beat40Button: RadioButton
-    private lateinit var beat65Button: RadioButton
-    private lateinit var beat80Button: RadioButton
     private lateinit var beat100Button: RadioButton
-    private lateinit var beat120Button: RadioButton
+    private lateinit var beat150Button: RadioButton
+    private lateinit var beat200Button: RadioButton
+    private lateinit var beat250Button: RadioButton
+    private lateinit var beat300Button: RadioButton
     private lateinit var soundGymButton: RadioButton
     private lateinit var soundStreetButton: RadioButton
 
@@ -3295,21 +3295,22 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (remainingMs in 1L..10_000L) {
+            val remainingSeconds = (remainingMs / 1_000L).coerceIn(1L, 10L)
             pushAiCoachCue(
                 key = "final_10_round_$currentTrainingRound",
                 message =
                     localText(
-                        "最后 10 秒！全力冲刺，把节奏顶住，拳不要飘。",
-                        "Final 10 seconds. Push hard, hold the rhythm, and keep punches clean.",
-                        "Dernières 10 secondes. Poussez fort, gardez le rythme et frappez propre.",
-                        "10 วินาทีสุดท้าย เร่งเต็มที่ คุมจังหวะและหมัดให้ชัด",
+                        "最后 $remainingSeconds 秒！全力冲刺，把节奏顶住，拳不要飘。",
+                        "Final $remainingSeconds seconds. Push hard, hold the rhythm, and keep punches clean.",
+                        "Dernières $remainingSeconds secondes. Poussez fort, gardez le rythme et frappez propre.",
+                        "เหลือ $remainingSeconds วินาที เร่งเต็มที่ คุมจังหวะและหมัดให้ชัด",
                     ),
                 meta =
                     localText(
-                        "触发原因：回合结束倒计时 10 秒",
-                        "Trigger: final 10 seconds",
-                        "Déclencheur : 10 secondes restantes",
-                        "สาเหตุ: เหลือ 10 วินาที",
+                        "触发原因：回合剩余 $remainingSeconds 秒",
+                        "Trigger: $remainingSeconds seconds remaining",
+                        "Déclencheur : $remainingSeconds secondes restantes",
+                        "สาเหตุ: เหลือ $remainingSeconds วินาที",
                     ),
             )
         }
@@ -3650,12 +3651,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun immersiveGrooveBpm(): Int {
-        val base = selectedBeatBpm.coerceIn(40, 120)
-        return when {
-            base < 70 -> base * 2
-            base < 90 -> 100
-            else -> base
-        }.coerceIn(80, 130)
+        return selectedBeatBpm.coerceIn(100, 300)
     }
 
     private fun renderImmersiveGroove(
@@ -4084,15 +4080,15 @@ class MainActivity : AppCompatActivity() {
         soundStreetButton.text = localText("街头", "Street", "Rue", "สตรีท")
         rhythmFreeButton.isChecked = selectedRhythmMode == TrainingRhythmMode.Free
         rhythmBeatButton.isChecked = selectedRhythmMode == TrainingRhythmMode.Rhythm
-        beat40Button.isChecked = selectedBeatBpm == 40
-        beat65Button.isChecked = selectedBeatBpm == 65
-        beat80Button.isChecked = selectedBeatBpm == 80
         beat100Button.isChecked = selectedBeatBpm == 100
-        beat120Button.isChecked = selectedBeatBpm == 120
+        beat150Button.isChecked = selectedBeatBpm == 150
+        beat200Button.isChecked = selectedBeatBpm == 200
+        beat250Button.isChecked = selectedBeatBpm == 250
+        beat300Button.isChecked = selectedBeatBpm == 300
         soundGymButton.isChecked = selectedSoundPack == SoundPack.Gym
         soundStreetButton.isChecked = selectedSoundPack == SoundPack.Street
         val musicEnabled = trainingJob?.isActive != true
-        listOf(rhythmFreeButton, rhythmBeatButton, beat40Button, beat65Button, beat80Button, beat100Button, beat120Button, soundGymButton, soundStreetButton).forEach {
+        listOf(rhythmFreeButton, rhythmBeatButton, beat100Button, beat150Button, beat200Button, beat250Button, beat300Button, soundGymButton, soundStreetButton).forEach {
             it.isEnabled = musicEnabled
             it.alpha = if (musicEnabled) 1f else 0.62f
         }
@@ -6135,7 +6131,7 @@ class MainActivity : AppCompatActivity() {
         val profile = cloudProfile ?: return ""
         val parts =
             mutableListOf(
-                "${localUserLabel()}: ${profile.serialMasked}",
+                "User ID: #${profile.userId}",
                 "${tr("profile_language")}: ${languageDisplayName(AppLanguage.fromStorage(profile.languageCode))}",
             )
         val countryCode = normalizedCountryCode(profile.countryCode)
@@ -6662,9 +6658,8 @@ class MainActivity : AppCompatActivity() {
     private fun buildProfileMetaText(): String {
         val profile = cloudProfile ?: return ""
         return buildString {
-            append(localUserLabel())
-            append(": ")
-            append(profile.serialMasked)
+            append("User ID: #")
+            append(profile.userId)
             append("   |   ")
             append(tr("profile_language"))
             append(": ")
@@ -6756,7 +6751,7 @@ class MainActivity : AppCompatActivity() {
         }
         val lines =
             result.top.joinToString("\n") { entry ->
-                "${rankLabel(entry.rank)} ${entry.nickname}\n${leaderboardPrimaryValueText(entry)}\n${entry.serialMasked}"
+                "${rankLabel(entry.rank)} ${entry.nickname}\n${leaderboardPrimaryValueText(entry)}\nUser ID #${entry.userId}"
             }
         val meLine =
             result.me?.let { entry ->
@@ -8127,11 +8122,11 @@ class MainActivity : AppCompatActivity() {
 
         rhythmFreeButton = optionButton(localText("自由", "Free", "Libre", "อิสระ"))
         rhythmBeatButton = optionButton(localText("跟拍", "Beat", "Tempo", "ตามจังหวะ"))
-        beat40Button = optionButton("40")
-        beat65Button = optionButton("65")
-        beat80Button = optionButton("80")
         beat100Button = optionButton("100")
-        beat120Button = optionButton("120")
+        beat150Button = optionButton("150")
+        beat200Button = optionButton("200")
+        beat250Button = optionButton("250")
+        beat300Button = optionButton("300")
         soundGymButton = optionButton(localText("拳击馆", "Gym", "Salle", "ยิม"))
         soundStreetButton = optionButton(localText("街头", "Street", "Rue", "สตรีท"))
 
@@ -8174,21 +8169,26 @@ class MainActivity : AppCompatActivity() {
         val bpmGroup =
             RadioGroup(this).apply {
                 orientation = RadioGroup.HORIZONTAL
-                addView(beat40Button)
-                addView(beat65Button)
-                addView(beat80Button)
                 addView(beat100Button)
-                addView(beat120Button)
+                addView(beat150Button)
+                addView(beat200Button)
+                addView(beat250Button)
+                addView(beat300Button)
                 setOnCheckedChangeListener { _, checkedId ->
                     selectedBeatBpm =
                         when (checkedId) {
-                            beat40Button.id -> 40
-                            beat65Button.id -> 65
                             beat100Button.id -> 100
-                            beat120Button.id -> 120
-                            else -> 80
+                            beat150Button.id -> 150
+                            beat200Button.id -> 200
+                            beat250Button.id -> 250
+                            beat300Button.id -> 300
+                            else -> 100
                         }
-                    prefs.edit().putInt(KEY_BEAT_BPM, selectedBeatBpm).apply()
+                    trainingSessionSetup = trainingSessionSetup.copy(bpm = selectedBeatBpm)
+                    prefs.edit()
+                        .putInt(KEY_BEAT_BPM, selectedBeatBpm)
+                        .putInt(KEY_TRAINING_SETUP_BPM, selectedBeatBpm)
+                        .apply()
                     refreshMusicImmersionControls()
                 }
             }
@@ -8405,22 +8405,22 @@ class MainActivity : AppCompatActivity() {
                                 compactActionButton("-", "#F4FFFC").apply {
                                     applySettingsNeutralButtonChrome(this)
                                     setOnClickListener {
-                                        pending = pending.copy(bpm = (pending.bpm - 5).coerceAtLeast(40))
+                                        pending = pending.copy(bpm = (pending.bpm - 5).coerceAtLeast(100))
                                         render()
                                     }
                                 },
                             )
                             addView(
                                 SeekBar(this@MainActivity).apply {
-                                    max = 100
-                                    progress = pending.bpm.coerceIn(40, 140) - 40
+                                    max = 200
+                                    progress = pending.bpm.coerceIn(100, 300) - 100
                                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                                     setOnSeekBarChangeListener(
                                         object : SeekBar.OnSeekBarChangeListener {
                                             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                                                 if (fromUser) {
-                                                    val stepped = ((progress + 40) / 5) * 5
-                                                    pending = pending.copy(bpm = stepped.coerceIn(40, 140))
+                                                    val stepped = ((progress + 100) / 5) * 5
+                                                    pending = pending.copy(bpm = stepped.coerceIn(100, 300))
                                                     render()
                                                 }
                                             }
@@ -8435,7 +8435,7 @@ class MainActivity : AppCompatActivity() {
                                 compactActionButton("+", "#F4FFFC").apply {
                                     applySettingsNeutralButtonChrome(this)
                                     setOnClickListener {
-                                        pending = pending.copy(bpm = (pending.bpm + 5).coerceAtMost(140))
+                                        pending = pending.copy(bpm = (pending.bpm + 5).coerceAtMost(300))
                                         render()
                                     }
                                 },
@@ -11939,7 +11939,7 @@ class MainActivity : AppCompatActivity() {
                 .putBoolean(KEY_RHYTHM_MODE_ENABLED_ONCE, true)
                 .apply()
         }
-        selectedBeatBpm = prefs.getInt(KEY_BEAT_BPM, 80).coerceIn(40, 140)
+        selectedBeatBpm = prefs.getInt(KEY_BEAT_BPM, 100).coerceIn(100, 300)
         selectedSoundPack =
             runCatching {
                 SoundPack.valueOf(prefs.getString(KEY_SOUND_PACK, SoundPack.Gym.name).orEmpty())
@@ -11971,7 +11971,7 @@ class MainActivity : AppCompatActivity() {
                     runCatching {
                         TrainingRhythmMode.valueOf(prefs.getString(KEY_TRAINING_SETUP_RHYTHM_MODE, selectedRhythmMode.name).orEmpty())
                     }.getOrDefault(selectedRhythmMode),
-                bpm = prefs.getInt(KEY_TRAINING_SETUP_BPM, 80).coerceIn(40, 140),
+                bpm = prefs.getInt(KEY_TRAINING_SETUP_BPM, 100).coerceIn(100, 300),
             )
         if (!prefs.getBoolean(KEY_TRAINING_SETUP_BEGINNER_DEFAULT_APPLIED, false)) {
             val hasStoredTrainingSetup =
@@ -12207,8 +12207,10 @@ class MainActivity : AppCompatActivity() {
         when {
             text.contains("回合开始") || text.contains("Round") ->
                 "Round starts. Settle your breathing, punch short, and bring the guard back."
-            text.contains("最后") || text.contains("Final") ->
-                "Final 10 seconds. Push hard, hold the rhythm, and keep punches clean."
+            text.contains("最后") || text.contains("Final") -> {
+                val seconds = Regex("""\d+""").find(text)?.value ?: "10"
+                "Final $seconds seconds. Push hard, hold the rhythm, and keep punches clean."
+            }
             text.contains("节奏") || text.contains("pace", ignoreCase = true) || text.contains("BPM") ->
                 "Pick up the pace. Shorten the punch and recover faster."
             text.contains("力度") || text.contains("力量评分") || text.contains("force", ignoreCase = true) ->
@@ -13587,13 +13589,13 @@ class MainActivity : AppCompatActivity() {
                 setPadding(0, dp(4), 0, 0)
             },
         )
-        val serialBadge =
-            badgeText(entry.serialMasked, textColor = "#557A7D", fillColor = "#F0F8F6").apply {
+        val userBadge =
+            badgeText("User ID #${entry.userId}", textColor = "#557A7D", fillColor = "#F0F8F6").apply {
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             }
         row.addView(rankView)
         row.addView(content)
-        row.addView(serialBadge)
+        row.addView(userBadge)
         card.addView(row)
         return card
     }
@@ -13951,7 +13953,7 @@ class MainActivity : AppCompatActivity() {
             },
         )
         sideColumn.addView(
-            badgeText(entry.serialMasked, textColor = "#557A7D", fillColor = "#F0F8F6").apply {
+            badgeText("User ID #${entry.userId}", textColor = "#557A7D", fillColor = "#F0F8F6").apply {
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 (layoutParams as? LinearLayout.LayoutParams)?.topMargin = dp(6)
             },

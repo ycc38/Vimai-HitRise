@@ -1,6 +1,6 @@
 HitRise User Agreement
-Version: V1.2
-Effective Date: 2026-09-16
+Version: V1.3
+Effective Date: 2026-09-21
 
 1. Scope
 This Agreement applies to the HitRise app, Bluetooth connection features for smart boxing speed-ball devices, cloud training records, achievements, leaderboards, profile features, sound effects, and background music resources provided by Shaoxing Weimai Technology Co., Ltd.
@@ -17,6 +17,8 @@ HitRise provides features including:
 6. local or cloud sound effects, background music, and share posters.
 
 Some features depend on smart hardware, phone Bluetooth, system permissions, network connection, and cloud services. Different phones, system versions, and Bluetooth environments may affect connection and data performance.
+
+The product has no product serial number or activation code, and HitRise does not ask users to provide either. Cloud profiles are associated with an anonymous user identifier generated automatically by the app and do not restrict local training features.
 
 3. Usage Requirements
 Use HitRise in a safe, open, and suitable exercise environment. Before training, check that the device is installed securely, the cord and surrounding area are safe, and your training intensity matches your physical condition.

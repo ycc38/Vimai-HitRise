@@ -132,7 +132,7 @@ struct TrainingSessionSetup: Codable, Equatable {
     var restHalfMinutes: Int = 1
     var rounds: Int = 3
     var rhythmMode: TrainingRhythmMode = .rhythm
-    var bpm: Int = 80
+    var bpm: Int = 100
 
     var workSeconds: Int { max(1, workMinutes) * 60 }
     var restSeconds: Int { max(0, restHalfMinutes) * 30 }

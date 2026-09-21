@@ -357,7 +357,7 @@ struct LeaderboardView: View {
                         Text(entry.nickname)
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: palette.textPrimary))
-                        Text(entry.serialMasked)
+                        Text("User ID #\(entry.userId)")
                             .font(.caption2)
                             .foregroundStyle(Color(hex: palette.textMuted))
                     }
@@ -435,7 +435,7 @@ struct ProfileView: View {
                     Text(app.profile?.nickname ?? "拳击用户")
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: palette.textPrimary))
-                    Text(app.profile?.serialMasked ?? app.identity.serial)
+                    Text(app.profile.map { "User ID #\($0.userId)" } ?? "本机训练资料")
                         .font(.caption)
                         .foregroundStyle(Color(hex: palette.textMuted))
                     Text("TIER \(app.profile?.currentTier ?? app.tier?.level ?? 1) | 连续 \(app.statistics?.currentStreak ?? app.trainingStreak) 天")

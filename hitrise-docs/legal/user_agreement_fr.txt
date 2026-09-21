@@ -1,6 +1,6 @@
 Accord utilisateur HitRise
-Version : V1.2
-Date d'effet : 2026-09-16
+Version : V1.3
+Date d'effet : 2026-09-21
 
 1. Champ d'application
 Le présent accord s'applique à l'application HitRise, aux fonctions de connexion Bluetooth pour les balles de vitesse connectées, aux entraînements cloud, succès, classements, profils, effets sonores et musiques de fond fournis par Shaoxing Weimai Technology Co., Ltd.
@@ -17,6 +17,8 @@ HitRise fournit notamment :
 6. des effets sonores locaux ou cloud, de la musique de fond et des affiches de partage.
 
 Certaines fonctions dépendent du matériel connecté, du Bluetooth du téléphone, des autorisations système, du réseau et des services cloud. Les téléphones, versions système et environnements Bluetooth différents peuvent influencer la connexion et les données.
+
+Le produit ne possède ni numéro de série produit ni code d'activation, et HitRise ne demande pas à l'utilisateur de fournir ces informations. Les profils cloud sont associés à un identifiant utilisateur anonyme généré automatiquement par l'application et ne limitent pas les fonctions d'entraînement locales.
 
 3. Conditions d'utilisation
 Utilisez HitRise dans un environnement sûr, ouvert et adapté à l'exercice. Avant l'entraînement, vérifiez que l'appareil est correctement installé, que la corde et l'environnement sont sûrs, et que l'intensité convient à votre condition physique.

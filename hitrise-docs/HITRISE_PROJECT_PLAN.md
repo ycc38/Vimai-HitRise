@@ -24,7 +24,7 @@
 - Internal port: 127.0.0.1:8014
 - Nginx snippet: /etc/nginx/snippets/hitrise-auth-location.conf
 - Nginx entry: /hitrise/
-- API Base URL: http://152.136.62.157/hitrise/api/v1/
+- API Base URL: https://hitrise.wavemill.cn/hitrise/api/v1/
 - Product code: HTR01
 
 ## Current Status
@@ -32,7 +32,7 @@
 - Android source now uses the HitRise product identity and deployment parameters.
 - Server code has been migrated to an independent Hitrise service.
 - Database hitrise has been created with the current schema.
-- Public health check: http://152.136.62.157/hitrise/health
+- Public health check: https://hitrise.wavemill.cn/hitrise/health
 - APK output: D:\2026\202605\hitrise\hitrise-deploy\apk\HitRise.apk
 
 ## Runtime Snapshot

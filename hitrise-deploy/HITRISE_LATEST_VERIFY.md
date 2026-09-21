@@ -7,7 +7,7 @@ Generated: 2026-05-19 07:03:30
 - Server source: D:\2026\202605\hitrise\hitrise-server
 - App name: HitRise
 - Android applicationId: com.zclei.hitrise
-- API Base URL: http://152.136.62.157/hitrise/api/v1/
+- API Base URL: https://hitrise.wavemill.cn/hitrise/api/v1/
 - Database: hitrise
 - Product code: HTR01
 - Remote service directory: /opt/hitrise-auth
@@ -18,8 +18,8 @@ Generated: 2026-05-19 07:03:30
 - Service port: 127.0.0.1:8014
 - Nginx snippet: /etc/nginx/snippets/hitrise-auth-location.conf
 - Nginx entry: /hitrise/
-- Public health check: http://152.136.62.157/hitrise/health
-- Public OpenAPI: http://152.136.62.157/hitrise/openapi.json
+- Public health check: https://hitrise.wavemill.cn/hitrise/health
+- Public OpenAPI: https://hitrise.wavemill.cn/hitrise/openapi.json
 
 ## Verification
 
