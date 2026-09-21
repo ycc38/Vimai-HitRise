@@ -8971,6 +8971,19 @@ class MainActivity : AppCompatActivity() {
                     accentColor = "#10BDAA",
                 ),
             )
+            addView(
+                bodyText(bluetoothWakeHintText()).apply {
+                    setTextColor(Color.parseColor("#70420D"))
+                    setTypeface(Typeface.DEFAULT_BOLD)
+                    background = roundedBackground("#FFF5E6", "#F2C078", 16)
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                    layoutParams =
+                        LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ).apply { topMargin = dp(10) }
+                },
+            )
             bluetoothStatusView =
                 bodyText(bluetoothStatusMessage).apply {
                     setTextColor(Color.parseColor("#12333A"))
@@ -9738,6 +9751,14 @@ class MainActivity : AppCompatActivity() {
             "โปรดสแกนอุปกรณ์ SENBALL# ก่อน เมื่อเชื่อมต่อแล้วจึงเริ่มฝึกได้",
         )
 
+    private fun bluetoothWakeHintText(): String =
+        localText(
+            "设备静止 1 分钟后会自动进入低功耗状态。连接蓝牙前请先击打一下设备以唤醒蓝牙，避免出现蓝牙设备搜索不到的情况。",
+            "The device automatically enters low-power mode after 1 minute of inactivity. Before connecting, strike it once to wake Bluetooth and prevent it from being missed during scanning.",
+            "Après 1 minute d'inactivité, l'appareil passe automatiquement en mode basse consommation. Avant la connexion, frappez-le une fois pour réveiller le Bluetooth et éviter qu'il ne soit introuvable lors du scan.",
+            "อุปกรณ์จะเข้าสู่โหมดประหยัดพลังงานโดยอัตโนมัติหลังไม่มีการใช้งาน 1 นาที ก่อนเชื่อมต่อ โปรดตีอุปกรณ์หนึ่งครั้งเพื่อปลุกบลูทูธและป้องกันไม่ให้สแกนหาอุปกรณ์ไม่พบ",
+        )
+
     private fun bluetoothScanLabel(): String =
         localText("扫描", "Scan", "Scanner", "สแกน")
 
@@ -9834,12 +9855,13 @@ class MainActivity : AppCompatActivity() {
         )
 
     private fun bluetoothFirstUseGuideHint(): String =
-        localText(
-            "连接成功后，顶部蓝牙图标会变为蓝色，并显示电量。",
-            "After connection, the top Bluetooth icon turns blue and shows battery level.",
-            "Après connexion, l'icône Bluetooth en haut devient bleue et affiche la batterie.",
-            "หลังเชื่อมต่อ ไอคอนบลูทูธด้านบนจะเป็นสีน้ำเงินและแสดงแบตเตอรี่",
-        )
+        bluetoothWakeHintText() + "\n\n" +
+            localText(
+                "连接成功后，顶部蓝牙图标会变为蓝色，并显示电量。",
+                "After connection, the top Bluetooth icon turns blue and shows battery level.",
+                "Après connexion, l'icône Bluetooth en haut devient bleue et affiche la batterie.",
+                "หลังเชื่อมต่อ ไอคอนบลูทูธด้านบนจะเป็นสีน้ำเงินและแสดงแบตเตอรี่",
+            )
 
     private fun bluetoothFirstUseOpenSettingsLabel(): String =
         localText("去设置", "Open Settings", "Ouvrir les paramètres", "ไปที่ตั้งค่า")

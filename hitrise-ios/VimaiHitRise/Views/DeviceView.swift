@@ -26,6 +26,8 @@ struct BluetoothPanel: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            bluetoothWakeHint
+
             Text(statusTitle)
                 .font(.system(size: 22, weight: .black, design: .rounded))
                 .foregroundStyle(Color(hex: "#17343B"))
@@ -98,6 +100,36 @@ struct BluetoothPanel: View {
         .onChange(of: app.ble.devices) { _ in
             selectDefaultDeviceIfNeeded()
         }
+    }
+
+    private var bluetoothWakeHint: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "hand.tap.fill")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Color(hex: "#E07010"))
+                .frame(width: 24)
+            Text(
+                app.localized(
+                    "设备静止 1 分钟后会自动进入低功耗状态。连接蓝牙前请先击打一下设备以唤醒蓝牙，避免出现蓝牙设备搜索不到的情况。",
+                    "The device automatically enters low-power mode after 1 minute of inactivity. Before connecting, strike it once to wake Bluetooth and prevent it from being missed during scanning.",
+                    "Après 1 minute d’inactivité, l’appareil passe automatiquement en mode basse consommation. Avant la connexion, frappez-le une fois pour réveiller le Bluetooth et éviter qu’il ne soit introuvable lors du scan.",
+                    "อุปกรณ์จะเข้าสู่โหมดประหยัดพลังงานโดยอัตโนมัติหลังไม่มีการใช้งาน 1 นาที ก่อนเชื่อมต่อ โปรดตีอุปกรณ์หนึ่งครั้งเพื่อปลุกบลูทูธและป้องกันไม่ให้สแกนหาอุปกรณ์ไม่พบ"
+                )
+            )
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Color(hex: "#70420D"))
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(hex: "#FFF5E6"))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color(hex: "#F2C078"), lineWidth: 1.2)
+                )
+        )
     }
 
     private var deviceList: some View {
