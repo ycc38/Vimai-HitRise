@@ -147,8 +147,8 @@ class PunchWaveformView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun addForce(forceN: Float) {
-        val force = forceN.coerceAtLeast(0f)
+    fun addForce(relativePowerScore: Float) {
+        val force = relativePowerScore.coerceAtLeast(0f)
         latestForce = force
         peakForce = maxOf(peakForce, force)
         values.addLast(force)

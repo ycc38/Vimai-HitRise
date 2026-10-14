@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.BluetoothSocket
+import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
@@ -44,22 +45,24 @@ enum class SensorBallTransport {
 data class SensorBallTelemetry(
     val packetIndex: Int,
     val batteryRaw: Int,
+    val chargingFlagRaw: Int,
     val hitCount: Int,
-    val pressureHitCount: Int,
     val gyroForceRaw: Int,
     val pressureForceRaw: Int,
     val forceLow: Int,
     val forceHigh: Int,
-    val forceN: Int,
+    /** Unitless raw value reported by the device; not a calibrated physical force. */
+    val relativePowerScore: Int,
 ) {
     val peak: Int
-        get() = forceN
+        get() = relativePowerScore
 
     val batteryText: String =
-        when (batteryRaw) {
-            101 -> "充电"
-            102 -> "充满"
-            in 0..100 -> "$batteryRaw%"
+        when {
+            batteryRaw == 101 -> "充电"
+            batteryRaw == 102 -> "充满"
+            batteryRaw in 0..100 && chargingFlagRaw == 1 -> "充电 $batteryRaw%"
+            batteryRaw in 0..100 -> "$batteryRaw%"
             else -> "--"
         }
 }
@@ -377,7 +380,7 @@ class SensorBallBluetoothManager(
         }
         val result =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                targetGatt.writeCharacteristic(characteristic, payload, characteristic.writeType) == BluetoothGatt.GATT_SUCCESS
+                targetGatt.writeCharacteristic(characteristic, payload, characteristic.writeType) == BluetoothStatusCodes.SUCCESS
             } else {
                 characteristic.value = payload
                 targetGatt.writeCharacteristic(characteristic)
@@ -814,19 +817,17 @@ class SensorBallBluetoothManager(
             SensorBallTelemetry(
                 packetIndex = value[index + 3].toInt() and 0xFF,
                 batteryRaw = value[index + 4].toInt() and 0xFF,
+                chargingFlagRaw = value[index + 6].toInt() and 0xFF,
                 hitCount = value[index + 5].toInt() and 0xFF,
-                pressureHitCount = value[index + 6].toInt() and 0xFF,
                 gyroForceRaw = gyroForceRaw,
                 pressureForceRaw = pressureForceRaw,
                 forceLow = forceLow,
                 forceHigh = forceHigh,
-                // Legacy property name retained for cloud payload compatibility. This value is
-                // the unitless Relative Power Score reported directly by the hardware.
-                forceN = relativePowerScore,
+                relativePowerScore = relativePowerScore,
             )
         Log.d(
             TAG,
-            "telemetry packet=${telemetry.packetIndex} battery=${telemetry.batteryRaw} data2=${telemetry.hitCount} data3=${telemetry.pressureHitCount} data4=$gyroForceRaw data5=$pressureForceRaw data6=$forceLow data7=$forceHigh relativePowerScore=$relativePowerScore",
+            "telemetry packet=${telemetry.packetIndex} data1Battery=${telemetry.batteryRaw} data2=${telemetry.hitCount} data3Charging=${telemetry.chargingFlagRaw} data4=$gyroForceRaw data5=$pressureForceRaw data6=$forceLow data7=$forceHigh relativePowerScore=$relativePowerScore",
         )
         return telemetry
     }
