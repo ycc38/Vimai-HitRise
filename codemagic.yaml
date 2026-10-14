@@ -52,6 +52,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.zclei.hitrise
       vars:
+        APP_STORE_CONNECT_ALTOOL_ADDITIONAL_ARGUMENTS: "--apple-id 6779880669"
         XCODE_PROJECT: "hitrise-ios/VimaiHitRise.xcodeproj"
         XCODE_SCHEME: "VimaiHitRise"
         BUNDLE_ID: "com.zclei.hitrise"
@@ -108,5 +109,5 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        submit_to_testflight: false
         submit_to_app_store: false
