@@ -9566,6 +9566,14 @@ class MainActivity : AppCompatActivity() {
                 val count = message.substringAfter("蓝牙已就绪，通知通道 ").substringBefore(" 个").toIntOrNull() ?: 0
                 localText("蓝牙已就绪，通知通道 $count 个", "Bluetooth ready, $count notify channel(s)", "Bluetooth prêt, $count canal(aux) de notification", "บลูทูธพร้อม ช่องแจ้งเตือน $count ช่อง")
             }
+            message.startsWith("蓝牙写入确认异常 status=") -> {
+                val status = message.substringAfter("status=").substringBefore("，")
+                localText("蓝牙写入确认异常 status=$status，继续保持连接", "Bluetooth write ack error status=$status. Staying connected.", "Erreur d'accusé d'écriture Bluetooth status=$status. Connexion maintenue.", "การยืนยันการเขียนบลูทูธผิดพลาด status=$status ยังคงเชื่อมต่ออยู่")
+            }
+            message.startsWith("BLE连接断开 status=") -> {
+                val status = message.substringAfter("status=")
+                localText("BLE连接断开 status=$status", "BLE disconnected status=$status", "BLE déconnecté status=$status", "BLE ตัดการเชื่อมต่อ status=$status")
+            }
             message == "BLE连接失败，尝试经典蓝牙..." ->
                 localText("BLE连接失败，尝试经典蓝牙...", "BLE failed. Trying Classic Bluetooth...", "BLE échoué. Essai Bluetooth classique...", "BLE ไม่สำเร็จ กำลังลองบลูทูธคลาสสิก...")
             message == "自动连接仅使用 BLE，请在设置中手动连接经典蓝牙设备" ->

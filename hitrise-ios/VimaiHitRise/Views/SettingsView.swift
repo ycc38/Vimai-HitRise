@@ -70,11 +70,13 @@ struct HitRiseSettingsView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("云端训练记录与排行榜")
+                    Text(app.localized("云端训练记录与排行榜", "Cloud Training Records & Leaderboard", "Historique cloud et classement", "บันทึกการฝึกบนคลาวด์และกระดานจัดอันดับ"))
                         .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundStyle(Color(hex: "#19C5B7"))
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(draftCloudEnabled ? "已允许上传匿名资料和训练成绩" : "训练成绩仅保留在本地，不会上传")
+                    Text(draftCloudEnabled
+                        ? app.localized("已允许上传匿名资料和训练成绩", "Anonymous profile and training results may be uploaded", "Profil anonyme et résultats autorisés à l'envoi", "อนุญาตให้อัปโหลดโปรไฟล์ไม่ระบุตัวตนและผลการฝึกแล้ว")
+                        : app.localized("训练成绩仅保留在本地，不会上传", "Training results stay on this device and are not uploaded", "Les résultats restent sur cet appareil et ne sont pas envoyés", "ผลการฝึกเก็บไว้ในเครื่องนี้เท่านั้น ไม่มีการอัปโหลด"))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color(hex: "#557A7D"))
                         .fixedSize(horizontal: false, vertical: true)
@@ -85,13 +87,18 @@ struct HitRiseSettingsView: View {
                     .tint(Color(hex: "#10BDAA"))
             }
 
-            Text("开启后，App 会将匿名用户编号、昵称、训练成绩和统计数据上传至 HitRise 服务器，用于云端历史、成就、个人资料和排行榜；排行榜可能公开昵称、段位和成绩。")
+            Text(app.localized(
+                "开启后，App 会将匿名用户编号、昵称、训练成绩和统计数据上传至 HitRise 服务器，用于云端历史、成就、个人资料和排行榜；排行榜可能公开昵称、段位和成绩。",
+                "When enabled, the app uploads your anonymous user ID, nickname, training results, and stats to the HitRise server for cloud history, achievements, profile, and leaderboards. Leaderboards may show your nickname, rank, and scores publicly.",
+                "Une fois activé, l'app envoie votre identifiant anonyme, votre pseudo, vos résultats et statistiques au serveur HitRise pour l'historique cloud, les succès, le profil et les classements. Les classements peuvent afficher publiquement votre pseudo, votre rang et vos scores.",
+                "เมื่อเปิดใช้ แอปจะอัปโหลดรหัสผู้ใช้แบบไม่ระบุตัวตน ชื่อเล่น ผลการฝึก และสถิติไปยังเซิร์ฟเวอร์ HitRise สำหรับประวัติบนคลาวด์ ความสำเร็จ โปรไฟล์ และกระดานจัดอันดับ ซึ่งอาจแสดงชื่อเล่น ระดับ และคะแนนของคุณต่อสาธารณะ"
+            ))
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Color(hex: "#557A7D"))
                 .fixedSize(horizontal: false, vertical: true)
 
             Link(destination: URL(string: "https://ycc38.github.io/Vimai-HitRise/privacy.html")!) {
-                Label("查看隐私政策", systemImage: "doc.text")
+                Label(app.localized("查看隐私政策", "View Privacy Policy", "Voir la politique de confidentialité", "ดูนโยบายความเป็นส่วนตัว"), systemImage: "doc.text")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Color(hex: "#087F75"))
             }
@@ -110,13 +117,13 @@ struct HitRiseSettingsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("蓝牙与语言设置")
+            Text(app.localized("蓝牙与语言设置", "Bluetooth & Language", "Bluetooth et langue", "บลูทูธและภาษา"))
                 .font(.system(size: 30, weight: .black, design: .rounded))
                 .foregroundStyle(Color(hex: "#17343B"))
                 .minimumScaleFactor(0.75)
                 .lineLimit(1)
 
-            Text("连接 SENBALL# 设备，并选择 APP 显示语言。")
+            Text(app.localized("连接 SENBALL# 设备，并选择 APP 显示语言。", "Connect your SENBALL# device and choose the app language.", "Connectez votre appareil SENBALL# et choisissez la langue de l'app.", "เชื่อมต่ออุปกรณ์ SENBALL# และเลือกภาษาของแอป"))
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Color(hex: "#557A7D"))
                 .fixedSize(horizontal: false, vertical: true)
@@ -127,10 +134,10 @@ struct HitRiseSettingsView: View {
     private var languagePanel: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("APP 语言")
+                Text(app.localized("APP 语言", "App Language", "Langue de l'app", "ภาษาแอป"))
                     .font(.system(size: 24, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: "#19C5B7"))
-                Text("界面和训练提示会按照这里的语言显示。")
+                Text(app.localized("界面和训练提示会按照这里的语言显示。", "The interface and training cues will use this language.", "L'interface et les conseils d'entraînement utiliseront cette langue.", "หน้าจอและคำแนะนำการฝึกจะแสดงเป็นภาษานี้"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color(hex: "#557A7D"))
                     .fixedSize(horizontal: false, vertical: true)
@@ -213,7 +220,7 @@ struct HitRiseSettingsView: View {
             Button {
                 cancel()
             } label: {
-                Text("取消")
+                Text(app.localized("取消", "Cancel", "Annuler", "ยกเลิก"))
                     .font(.system(size: 22, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: "#17343B"))
                     .frame(width: 92, height: 92)
@@ -226,7 +233,7 @@ struct HitRiseSettingsView: View {
             Button {
                 save()
             } label: {
-                Text("保存")
+                Text(app.localized("保存", "Save", "Enregistrer", "บันทึก"))
                     .font(.system(size: 22, weight: .black, design: .rounded))
                     .foregroundStyle(Color.white)
                     .frame(width: 92, height: 92)

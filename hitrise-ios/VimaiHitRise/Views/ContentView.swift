@@ -59,10 +59,10 @@ enum HitRiseHomePage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .training: return "训练中心"
-        case .achievements: return "锻炼成果"
-        case .leaderboard: return "榜单排名"
-        case .profile: return "个人中心"
+        case .training: return localizedText("训练中心", "Training", "Entraînement", "ศูนย์ฝึก")
+        case .achievements: return localizedText("锻炼成果", "Achievements", "Succès", "ผลงาน")
+        case .leaderboard: return localizedText("榜单排名", "Leaderboard", "Classement", "อันดับ")
+        case .profile: return localizedText("个人中心", "Profile", "Profil", "โปรไฟล์")
         }
     }
 
@@ -176,6 +176,7 @@ struct ContentView: View {
 }
 
 struct CloudDataConsentView: View {
+    @EnvironmentObject private var app: AppViewModel
     let onDecline: () -> Void
     let onAccept: () -> Void
 
@@ -192,30 +193,40 @@ struct CloudDataConsentView: View {
                         .font(.system(size: 34, weight: .bold))
                         .foregroundStyle(Color(hex: "#10BDAA"))
 
-                    Text("云端训练记录与排行榜")
+                    Text(app.localized("云端训练记录与排行榜", "Cloud Training Records & Leaderboard", "Historique cloud et classement", "บันทึกการฝึกบนคลาวด์และกระดานจัดอันดับ"))
                         .font(.system(size: 26, weight: .black, design: .rounded))
                         .foregroundStyle(Color(hex: "#17343B"))
 
-                    Text("开启后，Vimai HitRise 会将匿名用户编号、昵称和训练成绩上传至 HitRise 服务器，用于同步训练历史、成就、个人统计和排行榜。排行榜可能向其他用户显示你的昵称、段位和成绩。")
+                    Text(app.localized(
+                        "开启后，Vimai HitRise 会将匿名用户编号、昵称和训练成绩上传至 HitRise 服务器，用于同步训练历史、成就、个人统计和排行榜。排行榜可能向其他用户显示你的昵称、段位和成绩。",
+                        "When enabled, Vimai HitRise uploads your anonymous user ID, nickname, and training results to the HitRise server to sync training history, achievements, personal stats, and leaderboards. Leaderboards may show your nickname, rank, and scores to other users.",
+                        "Une fois activé, Vimai HitRise envoie votre identifiant anonyme, votre pseudo et vos résultats au serveur HitRise pour synchroniser l'historique, les succès, les statistiques et les classements. Les classements peuvent afficher votre pseudo, votre rang et vos scores aux autres utilisateurs.",
+                        "เมื่อเปิดใช้ Vimai HitRise จะอัปโหลดรหัสผู้ใช้แบบไม่ระบุตัวตน ชื่อเล่น และผลการฝึกไปยังเซิร์ฟเวอร์ HitRise เพื่อซิงก์ประวัติการฝึก ความสำเร็จ สถิติส่วนตัว และกระดานจัดอันดับ กระดานจัดอันดับอาจแสดงชื่อเล่น ระดับ และคะแนนของคุณให้ผู้ใช้อื่นเห็น"
+                    ))
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Color(hex: "#456A6D"))
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Label("你可以选择暂不开启并继续使用本地训练功能，之后也可以随时在设置中更改。", systemImage: "iphone")
+                    Label(app.localized(
+                        "你可以选择暂不开启并继续使用本地训练功能，之后也可以随时在设置中更改。",
+                        "You can skip this and keep training locally. You can change this anytime in Settings.",
+                        "Vous pouvez ignorer cette option et continuer en local. Modifiable à tout moment dans les réglages.",
+                        "คุณสามารถข้ามและฝึกแบบออฟไลน์ต่อได้ และเปลี่ยนได้ทุกเมื่อในการตั้งค่า"
+                    ), systemImage: "iphone")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color(hex: "#557A7D"))
                         .fixedSize(horizontal: false, vertical: true)
 
                     Link(destination: privacyURL) {
-                        Label("查看隐私政策", systemImage: "doc.text")
+                        Label(app.localized("查看隐私政策", "View Privacy Policy", "Voir la politique de confidentialité", "ดูนโยบายความเป็นส่วนตัว"), systemImage: "doc.text")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: "#087F75"))
                     }
 
                     HStack(spacing: 12) {
-                        Button("暂不开启", action: onDecline)
+                        Button(app.localized("暂不开启", "Not Now", "Plus tard", "ไว้ทีหลัง"), action: onDecline)
                             .buttonStyle(CloudConsentButtonStyle(fill: "#E7F2EF", foreground: "#17343B"))
-                        Button("同意并开启", action: onAccept)
+                        Button(app.localized("同意并开启", "Agree & Enable", "Accepter et activer", "ยอมรับและเปิดใช้"), action: onAccept)
                             .buttonStyle(CloudConsentButtonStyle(fill: "#10BDAA", foreground: "#FFFFFF"))
                     }
                 }
@@ -250,6 +261,7 @@ private struct CloudConsentButtonStyle: ButtonStyle {
 }
 
 struct HitRiseLaunchSplashView: View {
+    @EnvironmentObject private var app: AppViewModel
     let onDismiss: () -> Void
 
     var body: some View {
@@ -285,7 +297,7 @@ struct HitRiseLaunchSplashView: View {
                     .font(.system(size: 16, weight: .black))
                     .tracking(1.2)
                     .foregroundStyle(Color(hex: "#FFF8E8"))
-                Text("智能拳击球训练")
+                Text(app.localized("智能拳击球训练", "HitRise Training", "Entraînement HitRise", "ฝึก HitRise"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Color(hex: "#CAA26A"))
             }
@@ -315,7 +327,7 @@ struct HitRiseLaunchSplashView: View {
                 )
                 .padding(.horizontal, 24)
 
-            Text("轻触跳过")
+            Text(app.localized("轻触跳过", "Tap to skip", "Touchez pour passer", "แตะเพื่อข้าม"))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color(hex: "#B88A54"))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -372,6 +384,7 @@ struct HitRiseHeader: View {
 }
 
 struct HitRiseBottomNav: View {
+    @EnvironmentObject private var app: AppViewModel
     @Binding var selectedPage: HitRiseHomePage
     let palette: HitRisePalette
 

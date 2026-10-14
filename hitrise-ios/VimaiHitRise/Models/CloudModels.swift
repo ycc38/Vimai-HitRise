@@ -268,8 +268,16 @@ struct CloudSoundAsset: Codable, Identifiable, Equatable {
     let durationMs: Int
     let url: URL
 
-    var displayName: String { nameZh.isEmpty ? nameEn : nameZh }
-    var displayDescription: String { descriptionZh.isEmpty ? descriptionEn : descriptionZh }
+    var displayName: String { Self.pick(zh: nameZh, en: nameEn) }
+    var displayDescription: String { Self.pick(zh: descriptionZh, en: descriptionEn) }
+
+    /// The catalog only ships Chinese and English, so French and Thai fall back to English.
+    private static func pick(zh: String, en: String) -> String {
+        if AppLanguage.code == "zh" {
+            return zh.isEmpty ? en : zh
+        }
+        return en.isEmpty ? zh : en
+    }
 }
 
 struct CloudSoundCatalog: Codable {

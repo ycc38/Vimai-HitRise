@@ -18,9 +18,14 @@ final class TrainingSessionController: ObservableObject {
     @Published private(set) var totalRounds: Int = 1
     @Published private(set) var rhythmSummary = RhythmSummary()
     @Published private(set) var comboSummary: [String: Int] = [:]
-    @Published private(set) var coachStatus: String = "待命"
-    @Published private(set) var coachMessage: String = "连接 SENBALL 后开始训练，我会根据节奏和相对力量评分给你提示。"
-    @Published private(set) var coachMeta: String = "AI 教练实时监听"
+    @Published private(set) var coachStatusText = LocalizedText("待命", "Standby", "En attente", "พร้อม")
+    @Published private(set) var coachMessageText = LocalizedText(
+        "连接 SENBALL 后开始训练，我会根据节奏和相对力量评分给你提示。",
+        "Connect SENBALL to start training. I'll give cues based on your rhythm and relative power score.",
+        "Connectez SENBALL pour commencer. Je vous guiderai selon votre rythme et votre score de puissance relative.",
+        "เชื่อมต่อ SENBALL เพื่อเริ่มฝึก ฉันจะให้คำแนะนำตามจังหวะและคะแนนพลังสัมพัทธ์ของคุณ"
+    )
+    @Published private(set) var coachMetaText = LocalizedText("AI 教练实时监听", "AI coach listening live", "Coach IA à l'écoute", "โค้ช AI กำลังฟังแบบเรียลไทม์")
 
     private var punchEvents: [PunchEvent] = []
     private var lastCounter: Int?
@@ -32,6 +37,10 @@ final class TrainingSessionController: ObservableObject {
     private var activeRoundConfig: RoundConfig?
     private var activeSoundPackId = "sfx_gym"
     private var lastPunchDate: Date?
+
+    var coachStatus: String { coachStatusText.text }
+    var coachMessage: String { coachMessageText.text }
+    var coachMeta: String { coachMetaText.text }
 
     var canStart: Bool {
         switch phase {
@@ -135,7 +144,17 @@ final class TrainingSessionController: ObservableObject {
 
     private func run(playMode: TrainingPlayMode, config: RoundConfig) async -> TrainingReport? {
         do {
-            pushCoach(status: "准备", message: "\(playMode.title) 即将开始", meta: "倒计时 3 秒")
+            let modeTitle = playMode.localizedTitle
+            pushCoach(
+                status: LocalizedText("准备", "Get ready", "Préparez-vous", "เตรียมตัว"),
+                message: LocalizedText(
+                    "\(modeTitle.zh) 即将开始",
+                    "\(modeTitle.en) is about to start",
+                    "\(modeTitle.fr) va commencer",
+                    "\(modeTitle.th) กำลังจะเริ่ม"
+                ),
+                meta: LocalizedText("倒计时 3 秒", "3-second countdown", "Compte à rebours de 3 s", "นับถอยหลัง 3 วินาที")
+            )
             for value in [3, 2, 1] {
                 phase = .countdown(value)
                 remainingSeconds = value
@@ -148,10 +167,18 @@ final class TrainingSessionController: ObservableObject {
                 currentRoundStartHitIndex = punchEvents.count
                 lastCounter = nil
                 phase = .running
+                let bpm = selectedSetup.bpm
                 pushCoach(
-                    status: "实时监听",
-                    message: "第 \(round)/\(config.rounds) 回合开始，保持出拳节奏。",
-                    meta: selectedSetup.rhythmMode == .rhythm ? "\(selectedSetup.bpm) BPM 节奏训练" : "自由训练"
+                    status: LocalizedText("实时监听", "Listening", "Écoute", "กำลังฟัง"),
+                    message: LocalizedText(
+                        "第 \(round)/\(config.rounds) 回合开始，保持出拳节奏。",
+                        "Round \(round)/\(config.rounds) starts. Keep your punching rhythm.",
+                        "Round \(round)/\(config.rounds) : gardez votre rythme de frappe.",
+                        "รอบ \(round)/\(config.rounds) เริ่มแล้ว รักษาจังหวะการออกหมัด"
+                    ),
+                    meta: selectedSetup.rhythmMode == .rhythm
+                        ? LocalizedText("\(bpm) BPM 节奏训练", "\(bpm) BPM rhythm training", "Rythme \(bpm) BPM", "ฝึกจังหวะ \(bpm) BPM")
+                        : LocalizedText("自由训练", "Free training", "Entraînement libre", "ฝึกอิสระ")
                 )
                 for remaining in stride(from: config.workSeconds, through: 0, by: -1) {
                     remainingSeconds = remaining
@@ -166,7 +193,17 @@ final class TrainingSessionController: ObservableObject {
                         phase = .resting(round: round, seconds: rest)
                         remainingSeconds = rest
                         if rest == config.restSeconds {
-                            pushCoach(status: "休息", message: "休息 \(config.restSeconds) 秒，下一回合继续。", meta: "第 \(round) 回合完成")
+                            let restSeconds = config.restSeconds
+                            pushCoach(
+                                status: LocalizedText("休息", "Rest", "Repos", "พัก"),
+                                message: LocalizedText(
+                                    "休息 \(restSeconds) 秒，下一回合继续。",
+                                    "Rest \(restSeconds) seconds, then the next round begins.",
+                                    "Repos \(restSeconds) s, puis round suivant.",
+                                    "พัก \(restSeconds) วินาที แล้วเริ่มรอบถัดไป"
+                                ),
+                                meta: LocalizedText("第 \(round) 回合完成", "Round \(round) complete", "Round \(round) terminé", "จบรอบที่ \(round)")
+                            )
                         }
                         if rest > 0 {
                             try await Task.sleep(nanoseconds: 1_000_000_000)
@@ -180,7 +217,12 @@ final class TrainingSessionController: ObservableObject {
                 return nil
             }
             phase = .error(error.localizedDescription)
-            pushCoach(status: "异常", message: error.localizedDescription, meta: "训练中断")
+            let reason = error.localizedDescription
+            pushCoach(
+                status: LocalizedText("异常", "Error", "Erreur", "ผิดพลาด"),
+                message: LocalizedText(reason, reason, reason, reason),
+                meta: LocalizedText("训练中断", "Training interrupted", "Entraînement interrompu", "การฝึกถูกขัดจังหวะ")
+            )
             return nil
         }
     }
@@ -204,9 +246,9 @@ final class TrainingSessionController: ObservableObject {
         currentRoundStart = nil
         currentRound = 1
         totalRounds = config.rounds
-        coachStatus = "待命"
-        coachMessage = "训练准备就绪。"
-        coachMeta = config.label
+        coachStatusText = LocalizedText("待命", "Standby", "En attente", "พร้อม")
+        coachMessageText = LocalizedText("训练准备就绪。", "Training is ready.", "L'entraînement est prêt.", "พร้อมเริ่มฝึกแล้ว")
+        coachMetaText = config.localizedLabel
     }
 
     private func roundConfig(for playMode: TrainingPlayMode, setup: TrainingSessionSetup) -> RoundConfig {
@@ -264,10 +306,26 @@ final class TrainingSessionController: ObservableObject {
         )
         latestReport = report
         phase = completed ? .finished : .idle
+        let hits = totalHits
+        let peak = Int(peakForceN)
+        let frequencyText = String(format: "%.2f", frequency)
+        let caloriesText = String(format: "%.1f", calories)
         pushCoach(
-            status: completed ? "完成" : "已停止",
-            message: "本次完成 \(totalHits) 拳，相对力量峰值评分 \(Int(peakForceN))。",
-            meta: "平均 \(String(format: "%.2f", frequency))/s | \(String(format: "%.1f", calories)) kcal"
+            status: completed
+                ? LocalizedText("完成", "Done", "Terminé", "เสร็จแล้ว")
+                : LocalizedText("已停止", "Stopped", "Arrêté", "หยุดแล้ว"),
+            message: LocalizedText(
+                "本次完成 \(hits) 拳，相对力量峰值评分 \(peak)。",
+                "\(hits) punches this session, peak relative power score \(peak).",
+                "\(hits) coups cette séance, score de puissance relative max. \(peak).",
+                "ครั้งนี้ออกหมัด \(hits) ครั้ง คะแนนพลังสัมพัทธ์สูงสุด \(peak)"
+            ),
+            meta: LocalizedText(
+                "平均 \(frequencyText)/s | \(caloriesText) kcal",
+                "Avg \(frequencyText)/s | \(caloriesText) kcal",
+                "Moy. \(frequencyText)/s | \(caloriesText) kcal",
+                "เฉลี่ย \(frequencyText)/s | \(caloriesText) kcal"
+            )
         )
         return report
     }
@@ -359,25 +417,63 @@ final class TrainingSessionController: ObservableObject {
 
     private func evaluatePunchCoachCue(forceN: Double) {
         if totalHits > 0, totalHits.isMultiple(of: 20) {
-            pushCoach(status: "节奏很好", message: "已经 \(totalHits) 拳，继续保持呼吸和脚步。", meta: "实时拳数提示")
+            let hits = totalHits
+            pushCoach(
+                status: LocalizedText("节奏很好", "Great rhythm", "Bon rythme", "จังหวะดีมาก"),
+                message: LocalizedText(
+                    "已经 \(hits) 拳，继续保持呼吸和脚步。",
+                    "\(hits) punches so far. Keep your breathing and footwork steady.",
+                    "Déjà \(hits) coups. Gardez votre respiration et vos appuis.",
+                    "ออกหมัดแล้ว \(hits) ครั้ง รักษาการหายใจและฟุตเวิร์ก"
+                ),
+                meta: LocalizedText("实时拳数提示", "Live punch count", "Compteur de coups en direct", "จำนวนหมัดแบบเรียลไทม์")
+            )
         } else if forceN >= max(200, peakForceN * 0.96) {
-            pushCoach(status: "重击", message: "这一拳的相对力量评分很高，注意回弹后快速复位。", meta: "峰值评分 \(Int(forceN))")
+            let score = Int(forceN)
+            pushCoach(
+                status: LocalizedText("重击", "Heavy hit", "Coup puissant", "หมัดหนัก"),
+                message: LocalizedText(
+                    "这一拳的相对力量评分很高，注意回弹后快速复位。",
+                    "High relative power score on that punch. Reset quickly after the rebound.",
+                    "Score de puissance relative élevé. Revenez vite en garde après le rebond.",
+                    "หมัดนี้คะแนนพลังสัมพัทธ์สูง รีบกลับท่าหลังลูกเด้งกลับ"
+                ),
+                meta: LocalizedText("峰值评分 \(score)", "Peak score \(score)", "Score max. \(score)", "คะแนนสูงสุด \(score)")
+            )
         }
     }
 
     private func evaluateTimerCoachCue(remaining: Int, total: Int) {
         guard remaining > 0 else { return }
         if remaining == total / 2 {
-            pushCoach(status: "中段", message: "训练过半，别急，稳定输出。", meta: "剩余 \(remaining) 秒")
+            pushCoach(
+                status: LocalizedText("中段", "Halfway", "Mi-parcours", "ครึ่งทาง"),
+                message: LocalizedText(
+                    "训练过半，别急，稳定输出。",
+                    "Halfway there. Stay calm and keep a steady output.",
+                    "À mi-parcours. Restez calme et régulier.",
+                    "ผ่านครึ่งทางแล้ว ใจเย็นและออกหมัดให้สม่ำเสมอ"
+                ),
+                meta: LocalizedText("剩余 \(remaining) 秒", "\(remaining)s left", "\(remaining) s restantes", "เหลือ \(remaining) วินาที")
+            )
         } else if remaining == 10 {
-            pushCoach(status: "冲刺", message: "最后 10 秒，加速完成这一组。", meta: "倒计时冲刺")
+            pushCoach(
+                status: LocalizedText("冲刺", "Sprint", "Sprint", "สปรินต์"),
+                message: LocalizedText(
+                    "最后 10 秒，加速完成这一组。",
+                    "Final 10 seconds. Speed up and finish this set.",
+                    "Dernières 10 secondes. Accélérez pour finir la série.",
+                    "10 วินาทีสุดท้าย เร่งให้จบเซ็ตนี้"
+                ),
+                meta: LocalizedText("倒计时冲刺", "Final sprint", "Sprint final", "สปรินต์ช่วงท้าย")
+            )
         }
     }
 
-    private func pushCoach(status: String, message: String, meta: String) {
-        coachStatus = status
-        coachMessage = message
-        coachMeta = meta
+    private func pushCoach(status: LocalizedText, message: LocalizedText, meta: LocalizedText) {
+        coachStatusText = status
+        coachMessageText = message
+        coachMetaText = meta
     }
 
     private func counterDelta(from previous: Int, to current: Int) -> Int {

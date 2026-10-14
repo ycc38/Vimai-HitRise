@@ -34,7 +34,7 @@ struct AchievementsHistoryView: View {
                     Text(tierTitle)
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: palette.textPrimary))
-                    Text("累计最佳 30 秒 \(app.tier?.bestHits ?? app.statistics?.best30Hits ?? 0) 拳")
+                    Text(bestHitsText)
                         .font(.caption)
                         .foregroundStyle(Color(hex: palette.textSecondary))
                 }
@@ -65,10 +65,14 @@ struct AchievementsHistoryView: View {
     private func achievementsGrid(_ palette: HitRisePalette) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
-                HitRiseSectionTitle(title: "训练成就", subtitle: "解锁徽章，记录长期进步", palette: palette)
+                HitRiseSectionTitle(
+                    title: app.localized("训练成就", "Achievements", "Succès", "ความสำเร็จ"),
+                    subtitle: app.localized("解锁徽章，记录长期进步", "Unlock badges and track long-term progress", "Débloquez des badges et suivez vos progrès", "ปลดล็อกเหรียญและติดตามความก้าวหน้าระยะยาว"),
+                    palette: palette
+                )
                 Spacer()
                 ShareLink(item: achievementsShareText) {
-                    Text("分享荣誉")
+                    Text(app.localized("分享荣誉", "Share Honors", "Partager", "แชร์"))
                         .font(.caption.weight(.black))
                         .foregroundStyle(Color(hex: "#096D65"))
                         .padding(.horizontal, 10)
@@ -82,7 +86,7 @@ struct AchievementsHistoryView: View {
                     AchievementBadgeCard(item: item, palette: palette)
                 }
                 if app.achievements.isEmpty {
-                    emptyState("暂无成就数据，刷新云端后显示。", palette: palette)
+                    emptyState(app.localized("暂无成就数据，刷新云端后显示。", "No achievements yet. They will appear after a cloud refresh.", "Aucun succès pour l'instant. Ils apparaîtront après une actualisation cloud.", "ยังไม่มีข้อมูลความสำเร็จ จะแสดงหลังรีเฟรชคลาวด์"), palette: palette)
                 }
             }
         }
@@ -90,9 +94,13 @@ struct AchievementsHistoryView: View {
 
     private func historyList(_ palette: HitRisePalette) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HitRiseSectionTitle(title: "训练历史", subtitle: "最近云端训练记录", palette: palette)
+            HitRiseSectionTitle(
+                title: app.localized("训练历史", "Training History", "Historique", "ประวัติการฝึก"),
+                subtitle: app.localized("最近云端训练记录", "Recent cloud training records", "Entraînements récents dans le cloud", "บันทึกการฝึกล่าสุดบนคลาวด์"),
+                palette: palette
+            )
             if app.history.isEmpty {
-                emptyState("暂无云端训练记录。", palette: palette)
+                emptyState(app.localized("暂无云端训练记录。", "No cloud training records yet.", "Aucun entraînement dans le cloud.", "ยังไม่มีบันทึกการฝึกบนคลาวด์"), palette: palette)
             } else {
                 ForEach(app.history) { item in
                     HistorySessionCard(item: item, palette: palette)
@@ -109,26 +117,41 @@ struct AchievementsHistoryView: View {
         }
     }
 
+    private var bestHitsText: String {
+        let hits = app.tier?.bestHits ?? app.statistics?.best30Hits ?? 0
+        return app.localized("累计最佳 30 秒 \(hits) 拳", "Best 30 sec: \(hits) punches", "Meilleur 30 s : \(hits) coups", "ดีที่สุด 30 วินาที: \(hits) หมัด")
+    }
+
     private var tierTitle: String {
         if let next = app.tier?.nextLevel {
-            return "向 TIER \(next) 冲刺"
+            return app.localized("向 TIER \(next) 冲刺", "Push for TIER \(next)", "Objectif TIER \(next)", "มุ่งสู่ TIER \(next)")
         }
-        return "最高段位已解锁"
+        return app.localized("最高段位已解锁", "Top tier unlocked", "Rang maximal débloqué", "ปลดล็อกระดับสูงสุดแล้ว")
     }
 
     private var tierProgressText: String {
         guard let tier = app.tier else { return app.cloudMessage }
         if let nextHits = tier.nextHits {
-            return "\(tier.progressHits)/\(tier.progressTargetHits) | 下一段位 \(nextHits) 拳"
+            return app.localized(
+                "\(tier.progressHits)/\(tier.progressTargetHits) | 下一段位 \(nextHits) 拳",
+                "\(tier.progressHits)/\(tier.progressTargetHits) | Next tier \(nextHits) punches",
+                "\(tier.progressHits)/\(tier.progressTargetHits) | Rang suivant \(nextHits) coups",
+                "\(tier.progressHits)/\(tier.progressTargetHits) | ระดับถัดไป \(nextHits) หมัด"
+            )
         }
-        return "段位进度已完成"
+        return app.localized("段位进度已完成", "Tier progress complete", "Progression du rang terminée", "ความคืบหน้าระดับครบแล้ว")
     }
 
     private var achievementsShareText: String {
         let tier = app.tier?.level ?? app.profile?.currentTier ?? 1
         let unlocked = app.achievements.filter { $0.unlocked }.count
         let totalHits = app.statistics?.totalHits ?? app.history.first?.totalHits ?? 0
-        return "我的智能拳击速度球荣誉：当前 TIER \(tier)，已解锁 \(unlocked) 个成就，累计 \(totalHits) 拳。"
+        return app.localized(
+            "我的智能拳击速度球荣誉：当前 TIER \(tier)，已解锁 \(unlocked) 个成就，累计 \(totalHits) 拳。",
+            "My HitRise honors: TIER \(tier), \(unlocked) achievements unlocked, \(totalHits) total punches.",
+            "Mes succès HitRise : TIER \(tier), \(unlocked) succès débloqués, \(totalHits) coups au total.",
+            "ผลงาน HitRise ของฉัน: TIER \(tier) ปลดล็อก \(unlocked) ความสำเร็จ รวม \(totalHits) หมัด"
+        )
     }
 }
 
@@ -220,10 +243,10 @@ struct HistorySessionCard: View {
         HitRiseCard(palette: palette, stroke: palette.isLight ? "#BDEFE6" : "#20384A", fill: palette.card, padding: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("\(item.totalHits) 拳")
+                    Text(app.localized("\(item.totalHits) 拳", "\(item.totalHits) punches", "\(item.totalHits) coups", "\(item.totalHits) หมัด"))
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: palette.accentHot))
-                    Text(item.endedAt ?? item.startedAt ?? "云端训练")
+                    Text(item.endedAt ?? item.startedAt ?? app.localized("云端训练", "Cloud session", "Séance cloud", "การฝึกบนคลาวด์"))
                         .font(.caption)
                         .foregroundStyle(Color(hex: palette.textMuted))
                 }
@@ -250,10 +273,14 @@ struct LeaderboardView: View {
         ScrollView {
             VStack(spacing: 14) {
                 HStack(alignment: .top) {
-                    HitRiseSectionTitle(title: "排行榜", subtitle: "查看不同维度的训练排名", palette: palette)
+                    HitRiseSectionTitle(
+                        title: app.localized("排行榜", "Leaderboard", "Classement", "กระดานจัดอันดับ"),
+                        subtitle: app.localized("查看不同维度的训练排名", "See training rankings across different stats", "Classements selon différents critères", "ดูอันดับการฝึกในมิติต่างๆ"),
+                        palette: palette
+                    )
                     Spacer()
                     ShareLink(item: leaderboardShareText) {
-                        Text("分享排名")
+                        Text(app.localized("分享排名", "Share Rank", "Partager", "แชร์"))
                             .font(.caption.weight(.black))
                             .foregroundStyle(Color(hex: "#096D65"))
                             .padding(.horizontal, 10)
@@ -319,7 +346,7 @@ struct LeaderboardView: View {
             }
             if top.isEmpty {
                 HitRiseCard(palette: palette) {
-                    Text("暂无排行榜数据")
+                    Text(app.localized("暂无排行榜数据", "No leaderboard data yet", "Aucune donnée de classement", "ยังไม่มีข้อมูลอันดับ"))
                         .foregroundStyle(Color(hex: palette.textMuted))
                 }
             }
@@ -330,7 +357,7 @@ struct LeaderboardView: View {
         HitRiseCard(palette: palette, stroke: palette.isLight ? "#BDEFE6" : "#2A5C7B", fill: palette.card) {
             HStack {
                 VStack(alignment: .leading) {
-                    Text("我的排名")
+                    Text(app.localized("我的排名", "My Rank", "Mon rang", "อันดับของฉัน"))
                         .font(.caption.weight(.black))
                         .foregroundStyle(Color(hex: palette.accentHot))
                     Text("#\(entry.rank) \(entry.nickname)")
@@ -391,9 +418,20 @@ struct LeaderboardView: View {
 
     private var leaderboardShareText: String {
         guard let me = app.leaderboardMe else {
-            return "我正在挑战智能拳击速度球排行榜，来一起训练。"
+            return app.localized(
+                "我正在挑战智能拳击速度球排行榜，来一起训练。",
+                "I'm climbing the HitRise leaderboard. Come train with me!",
+                "Je grimpe dans le classement HitRise. Venez vous entraîner avec moi !",
+                "ฉันกำลังไต่อันดับ HitRise มาฝึกด้วยกันนะ!"
+            )
         }
-        return "我的智能拳击速度球排名：#\(me.rank) \(me.nickname)，成绩 \(scoreText(me))。"
+        let score = scoreText(me)
+        return app.localized(
+            "我的智能拳击速度球排名：#\(me.rank) \(me.nickname)，成绩 \(score)。",
+            "My HitRise rank: #\(me.rank) \(me.nickname), score \(score).",
+            "Mon rang HitRise : #\(me.rank) \(me.nickname), score \(score).",
+            "อันดับ HitRise ของฉัน: #\(me.rank) \(me.nickname) คะแนน \(score)"
+        )
     }
 }
 
@@ -432,13 +470,13 @@ struct ProfileView: View {
                     .background(Circle().fill(Color(hex: app.profile?.avatarColor ?? "#CC4400")))
                     .overlay(Circle().stroke(Color(hex: palette.accentHot), lineWidth: 2))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(app.profile?.nickname ?? "拳击用户")
+                    Text(app.profile?.nickname ?? defaultNickname)
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: palette.textPrimary))
-                    Text(app.profile.map { "User ID #\($0.userId)" } ?? "本机训练资料")
+                    Text(app.profile.map { "User ID #\($0.userId)" } ?? app.localized("本机训练资料", "Local training profile", "Profil d'entraînement local", "โปรไฟล์การฝึกในเครื่อง"))
                         .font(.caption)
                         .foregroundStyle(Color(hex: palette.textMuted))
-                    Text("TIER \(app.profile?.currentTier ?? app.tier?.level ?? 1) | 连续 \(app.statistics?.currentStreak ?? app.trainingStreak) 天")
+                    Text(tierStreakText)
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color(hex: palette.accentHot))
                 }
@@ -451,9 +489,27 @@ struct ProfileView: View {
 
     private func statsGrid(_ palette: HitRisePalette) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-            HitRiseMetricTile(title: "累计训练", value: "\(app.statistics?.totalSessions ?? 0)", unit: "次", palette: palette, accent: palette.accent)
-            HitRiseMetricTile(title: "累计拳数", value: "\(app.statistics?.totalHits ?? 0)", unit: "拳", palette: palette, accent: palette.accentHot)
-            HitRiseMetricTile(title: "最佳 30 秒", value: "\(app.statistics?.best30Hits ?? 0)", unit: "拳", palette: palette, accent: palette.success)
+            HitRiseMetricTile(
+                title: app.localized("累计训练", "Sessions", "Séances", "จำนวนครั้งที่ฝึก"),
+                value: "\(app.statistics?.totalSessions ?? 0)",
+                unit: app.localized("次", "", "", "ครั้ง"),
+                palette: palette,
+                accent: palette.accent
+            )
+            HitRiseMetricTile(
+                title: app.localized("累计拳数", "Total Punches", "Total de coups", "หมัดรวม"),
+                value: "\(app.statistics?.totalHits ?? 0)",
+                unit: punchUnit,
+                palette: palette,
+                accent: palette.accentHot
+            )
+            HitRiseMetricTile(
+                title: app.localized("最佳 30 秒", "Best 30 sec", "Meilleur 30 s", "ดีที่สุด 30 วินาที"),
+                value: "\(app.statistics?.best30Hits ?? 0)",
+                unit: punchUnit,
+                palette: palette,
+                accent: palette.success
+            )
             HitRiseMetricTile(
                 title: app.localized("相对力量峰值评分", "Peak Relative Power Score", "Score relatif max.", "คะแนนพลังสัมพัทธ์สูงสุด"),
                 value: "\(Int(app.statistics?.bestPeakForceN ?? 0))",
@@ -467,14 +523,14 @@ struct ProfileView: View {
     private func actionPanel(_ palette: HitRisePalette) -> some View {
         HitRiseCard(palette: palette) {
             HStack(spacing: 12) {
-                HitRiseActionButton(title: "编辑资料", systemImage: "person.crop.circle", palette: palette, fill: "#16384A") {
+                HitRiseActionButton(title: app.localized("编辑资料", "Edit Profile", "Modifier le profil", "แก้ไขโปรไฟล์"), systemImage: "person.crop.circle", palette: palette, fill: "#16384A") {
                     showingEdit = true
                 }
-                HitRiseActionButton(title: "刷新云端", systemImage: "arrow.clockwise", palette: palette, fill: palette.accentHot) {
+                HitRiseActionButton(title: app.localized("刷新云端", "Refresh Cloud", "Actualiser", "รีเฟรชคลาวด์"), systemImage: "arrow.clockwise", palette: palette, fill: palette.accentHot) {
                     Task { await app.refreshCloudData() }
                 }
             }
-            Text("开发者：zclei@vip.sina.com")
+            Text(app.localized("开发者：zclei@vip.sina.com", "Developer: zclei@vip.sina.com", "Développeur : zclei@vip.sina.com", "ผู้พัฒนา: zclei@vip.sina.com"))
                 .font(.caption)
                 .foregroundStyle(Color(hex: palette.textMuted))
         }
@@ -482,6 +538,25 @@ struct ProfileView: View {
 
     private var profileInitial: String {
         String((app.profile?.nickname ?? "R").prefix(1)).uppercased()
+    }
+
+    private var defaultNickname: String {
+        app.localized("拳击用户", "Boxer", "Boxeur", "นักชก")
+    }
+
+    private var punchUnit: String {
+        app.localized("拳", "punches", "coups", "หมัด")
+    }
+
+    private var tierStreakText: String {
+        let tier = app.profile?.currentTier ?? app.tier?.level ?? 1
+        let streak = app.statistics?.currentStreak ?? app.trainingStreak
+        return app.localized(
+            "TIER \(tier) | 连续 \(streak) 天",
+            "TIER \(tier) | \(streak)-day streak",
+            "TIER \(tier) | Série de \(streak) j",
+            "TIER \(tier) | ต่อเนื่อง \(streak) วัน"
+        )
     }
 }
 
@@ -499,7 +574,7 @@ struct EditProfileView: View {
                 Color(hex: palette.backgroundBottom).ignoresSafeArea()
                 VStack(spacing: 16) {
                     HitRiseCard(palette: palette) {
-                        TextField("昵称", text: $nickname)
+                        TextField(app.localized("昵称", "Nickname", "Pseudo", "ชื่อเล่น"), text: $nickname)
                             .textFieldStyle(.roundedBorder)
                         HStack {
                             ForEach(colors, id: \.self) { color in
@@ -511,9 +586,10 @@ struct EditProfileView: View {
                             }
                         }
                     }
-                    HitRiseActionButton(title: "保存", systemImage: "checkmark", palette: palette, fill: palette.accentHot) {
+                    HitRiseActionButton(title: app.localized("保存", "Save", "Enregistrer", "บันทึก"), systemImage: "checkmark", palette: palette, fill: palette.accentHot) {
                         Task {
-                            await app.updateProfile(nickname: nickname.isEmpty ? "拳击用户" : nickname, avatarColor: avatarColor)
+                            let fallbackNickname = app.localized("拳击用户", "Boxer", "Boxeur", "นักชก")
+                            await app.updateProfile(nickname: nickname.isEmpty ? fallbackNickname : nickname, avatarColor: avatarColor)
                             dismiss()
                         }
                     }
@@ -521,11 +597,11 @@ struct EditProfileView: View {
                 }
                 .padding()
             }
-            .navigationTitle("编辑资料")
+            .navigationTitle(app.localized("编辑资料", "Edit Profile", "Modifier le profil", "แก้ไขโปรไฟล์"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("关闭") { dismiss() }
+                    Button(app.localized("关闭", "Close", "Fermer", "ปิด")) { dismiss() }
                 }
             }
         }

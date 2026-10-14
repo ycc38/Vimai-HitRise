@@ -1,5 +1,47 @@
 import Foundation
 
+/// UI language shared with models and services. `AppViewModel.selectedLanguage` keeps it in sync.
+enum AppLanguage {
+    static var code = "zh"
+
+    static var speechVoiceCode: String {
+        switch code {
+        case "en": return "en-US"
+        case "fr": return "fr-FR"
+        case "th": return "th-TH"
+        default: return "zh-CN"
+        }
+    }
+}
+
+func localizedText(_ zh: String, _ en: String, _ fr: String, _ th: String) -> String {
+    switch AppLanguage.code {
+    case "en": return en
+    case "fr": return fr
+    case "th": return th
+    default: return zh
+    }
+}
+
+/// Text kept in every language so stored status messages follow later language switches.
+struct LocalizedText: Equatable {
+    let zh: String
+    let en: String
+    let fr: String
+    let th: String
+
+    init(_ zh: String, _ en: String, _ fr: String, _ th: String) {
+        self.zh = zh
+        self.en = en
+        self.fr = fr
+        self.th = th
+    }
+
+    var text: String {
+        localizedText(zh, en, fr, th)
+    }
+}
+
 enum TrainingMode: String, CaseIterable, Identifiable, Codable {
     case seconds30
     case seconds60
@@ -17,13 +59,17 @@ enum TrainingMode: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    var title: String {
+    var localizedTitle: LocalizedText {
         switch self {
-        case .seconds30: return "30 秒"
-        case .seconds60: return "60 秒"
-        case .burst10: return "10 秒爆发"
-        case .burst15: return "15 秒爆发"
+        case .seconds30: return LocalizedText("30 秒", "30 sec", "30 s", "30 วินาที")
+        case .seconds60: return LocalizedText("60 秒", "60 sec", "60 s", "60 วินาที")
+        case .burst10: return LocalizedText("10 秒爆发", "10 sec burst", "Explosif 10 s", "ระเบิด 10 วิ")
+        case .burst15: return LocalizedText("15 秒爆发", "15 sec burst", "Explosif 15 s", "ระเบิด 15 วิ")
         }
+    }
+
+    var title: String {
+        localizedTitle.text
     }
 
     var playMode: String {
@@ -70,25 +116,29 @@ enum TrainingPlayMode: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    var title: String {
+    var localizedTitle: LocalizedText {
         switch self {
-        case .classic30: return "经典 30 秒"
-        case .classic60: return "经典 60 秒"
-        case .burst10: return "10 秒爆发"
-        case .burst15: return "15 秒爆发"
-        case .levelChallenge: return "关卡挑战"
-        case .dailyChallenge: return "每日挑战"
+        case .classic30: return LocalizedText("经典 30 秒", "Classic 30 sec", "Classique 30 s", "คลาสสิก 30 วินาที")
+        case .classic60: return LocalizedText("经典 60 秒", "Classic 60 sec", "Classique 60 s", "คลาสสิก 60 วินาที")
+        case .burst10: return LocalizedText("10 秒爆发", "10 sec burst", "Explosif 10 s", "ระเบิด 10 วิ")
+        case .burst15: return LocalizedText("15 秒爆发", "15 sec burst", "Explosif 15 s", "ระเบิด 15 วิ")
+        case .levelChallenge: return LocalizedText("关卡挑战", "Level Challenge", "Défi de niveau", "ท้าทายด่าน")
+        case .dailyChallenge: return LocalizedText("每日挑战", "Daily Challenge", "Défi du jour", "ท้าทายประจำวัน")
         }
+    }
+
+    var title: String {
+        localizedTitle.text
     }
 
     var subtitle: String {
         switch self {
-        case .classic30: return "快速热身，稳定节奏。"
-        case .classic60: return "完整训练，观察耐力。"
-        case .burst10: return "短时冲刺，追求爆发。"
-        case .burst15: return "延长冲刺，压榨速度。"
-        case .levelChallenge: return "达成目标后提升等级。"
-        case .dailyChallenge: return "完成今日目标，累积连续训练。"
+        case .classic30: return localizedText("快速热身，稳定节奏。", "Quick warm-up with a steady rhythm.", "Échauffement rapide, rythme régulier.", "วอร์มอัพเร็ว รักษาจังหวะ")
+        case .classic60: return localizedText("完整训练，观察耐力。", "A full session to test endurance.", "Séance complète pour tester l'endurance.", "ฝึกเต็มรอบ ดูความอึด")
+        case .burst10: return localizedText("短时冲刺，追求爆发。", "Short sprint for explosive power.", "Sprint court pour l'explosivité.", "สปรินต์สั้น เน้นพลังระเบิด")
+        case .burst15: return localizedText("延长冲刺，压榨速度。", "Longer sprint to push your speed.", "Sprint prolongé pour pousser la vitesse.", "สปรินต์ยาวขึ้น ดันความเร็ว")
+        case .levelChallenge: return localizedText("达成目标后提升等级。", "Hit the target to level up.", "Atteignez l'objectif pour monter de niveau.", "ทำถึงเป้าเพื่อเลื่อนระดับ")
+        case .dailyChallenge: return localizedText("完成今日目标，累积连续训练。", "Hit today's target to build your streak.", "Atteignez l'objectif du jour pour prolonger la série.", "ทำเป้าวันนี้ให้สำเร็จเพื่อสะสมสถิติต่อเนื่อง")
         }
     }
 }
@@ -101,8 +151,8 @@ enum TrainingRhythmMode: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .free: return "自由"
-        case .rhythm: return "节奏"
+        case .free: return localizedText("自由", "Free", "Libre", "อิสระ")
+        case .rhythm: return localizedText("节奏", "Rhythm", "Rythme", "จังหวะ")
         }
     }
 }
@@ -117,12 +167,12 @@ enum TrainingPhase: Equatable {
 
     var title: String {
         switch self {
-        case .idle: return "准备训练"
+        case .idle: return localizedText("准备训练", "Ready to train", "Prêt", "พร้อมฝึก")
         case .countdown(let value): return "\(value)"
-        case .running: return "训练中"
-        case .resting: return "回合休息"
-        case .finished: return "训练完成"
-        case .error: return "训练异常"
+        case .running: return localizedText("训练中", "Training", "Entraînement", "กำลังฝึก")
+        case .resting: return localizedText("回合休息", "Round rest", "Repos", "พักระหว่างรอบ")
+        case .finished: return localizedText("训练完成", "Training complete", "Entraînement terminé", "ฝึกเสร็จแล้ว")
+        case .error: return localizedText("训练异常", "Training error", "Erreur d'entraînement", "การฝึกผิดพลาด")
         }
     }
 }
@@ -166,6 +216,17 @@ struct RoundConfig: Codable, Equatable {
 
     static func forMode(_ mode: TrainingMode) -> RoundConfig {
         RoundConfig(id: mode.rawValue, label: mode.title, workSeconds: mode.durationSeconds, restSeconds: 0, rounds: 1)
+    }
+
+    /// `label` is captured in the language active when the config was built; preset ids map back to their titles.
+    var localizedLabel: LocalizedText {
+        if let mode = TrainingMode(rawValue: id) {
+            return mode.localizedTitle
+        }
+        if let playMode = TrainingPlayMode.allCases.first(where: { $0.apiValue == id }) {
+            return playMode.localizedTitle
+        }
+        return LocalizedText(label, label, label, label)
     }
 }
 
@@ -229,8 +290,8 @@ struct SensorBallTelemetry: Equatable {
 
     var batteryText: String {
         switch batteryRaw {
-        case 101: return "充电"
-        case 102: return "充满"
+        case 101: return localizedText("充电", "Charging", "En charge", "กำลังชาร์จ")
+        case 102: return localizedText("充满", "Full", "Chargée", "เต็มแล้ว")
         case 0...100: return "\(batteryRaw)%"
         default: return "--"
         }

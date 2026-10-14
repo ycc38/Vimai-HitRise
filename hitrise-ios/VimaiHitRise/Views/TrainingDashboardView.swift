@@ -32,12 +32,12 @@ struct TrainingDashboardView: View {
         HitRiseCard(palette: palette, stroke: "#D6F2EC", fill: "#FFFFFF", padding: 14) {
             VStack(spacing: 16) {
                 HStack(spacing: 10) {
-                    Text("实时训练")
+                    Text(app.localized("实时训练", "Live Training", "Entraînement en direct", "ฝึกสด"))
                         .font(.headline.weight(.black))
                         .foregroundStyle(Color(hex: "#17343B"))
                     Spacer(minLength: 8)
                     HitRiseBadge(
-                        text: "第 \(app.training.currentRound) / \(app.training.totalRounds) 回合",
+                        text: roundBadgeText(current: app.training.currentRound, total: app.training.totalRounds),
                         palette: palette,
                         fill: "#E4FFF9",
                         textColor: "#0A9D90"
@@ -45,7 +45,7 @@ struct TrainingDashboardView: View {
                     Button {
                         showingTrainingSettings = true
                     } label: {
-                        Label("训练设置", systemImage: "gearshape")
+                        Label(trainingSettingsTitle, systemImage: "gearshape")
                             .font(.system(size: 11, weight: .black))
                             .foregroundStyle(Color(hex: "#17343B"))
                             .lineLimit(1)
@@ -105,11 +105,11 @@ struct TrainingDashboardView: View {
                 Text("HitRise")
                     .font(.system(size: 26, weight: .black, design: .rounded).italic())
                     .foregroundStyle(Color(hex: "#17343B"))
-                Text("家庭健身 · 燃脂拳击")
+                Text(app.localized("家庭健身 · 燃脂拳击", "Home Fitness · Fat-Burning Boxing", "Fitness à domicile · Boxe brûle-graisse", "ฟิตเนสที่บ้าน · ชกมวยเผาผลาญไขมัน"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "#4C7478"))
                     .padding(.top, 6)
-                Text("10分钟\n轻松暴汗！")
+                Text(app.localized("10分钟\n轻松暴汗！", "10 minutes\nto a great sweat!", "10 minutes\npour bien transpirer !", "10 นาที\nเหงื่อท่วมสบายๆ!"))
                     .font(.system(size: 33, weight: .black, design: .rounded).italic())
                     .foregroundStyle(
                         LinearGradient(
@@ -120,7 +120,7 @@ struct TrainingDashboardView: View {
                     )
                     .lineSpacing(2)
                     .padding(.top, 36)
-                Text("健身 | 减压 | 燃脂")
+                Text(app.localized("健身 | 减压 | 燃脂", "Fitness | Stress Relief | Fat Burn", "Forme | Anti-stress | Brûle-graisse", "ฟิตเนส | คลายเครียด | เผาผลาญไขมัน"))
                     .font(.caption.weight(.black))
                     .foregroundStyle(Color(hex: "#17343B"))
                     .padding(.top, 58)
@@ -200,7 +200,7 @@ struct TrainingDashboardView: View {
     private func timerAndCount(_ palette: HitRisePalette) -> some View {
         HStack(spacing: 10) {
             roundActionButton(
-                title: "开始",
+                title: app.localized("开始", "Start", "Démarrer", "เริ่ม"),
                 fill: "#20C8BA",
                 disabled: !app.training.canStart
             ) {
@@ -214,7 +214,7 @@ struct TrainingDashboardView: View {
                 CircularTimerRing(
                     progress: app.training.progressFraction,
                     center: timeText,
-                    caption: "回合时间",
+                    caption: app.localized("回合时间", "Round time", "Temps du round", "เวลารอบ"),
                     palette: palette
                 )
                 .padding(9)
@@ -222,7 +222,7 @@ struct TrainingDashboardView: View {
             .frame(width: 126, height: 126)
 
             roundActionButton(
-                title: "结束",
+                title: app.localized("结束", "Stop", "Arrêter", "หยุด"),
                 fill: "#F6B986",
                 disabled: app.training.canStart
             ) {
@@ -233,22 +233,22 @@ struct TrainingDashboardView: View {
 
     private func realtimeDashboard(_ palette: HitRisePalette) -> some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-            HomeMetricTile(iconName: "home_metric_hits", title: "拳数", value: reportHitsText, unit: "次", palette: palette, accent: "#17343B")
+            HomeMetricTile(iconName: "home_metric_hits", title: app.localized("拳数", "Punches", "Coups", "หมัด"), value: reportHitsText, unit: hitUnit, palette: palette, accent: "#17343B")
             HomeMetricTile(iconName: "home_metric_bpm", title: "BPM", value: bpmText, unit: "", palette: palette, accent: "#17343B")
-            HomeMetricTile(iconName: "home_metric_calories", title: "卡路里", value: caloriesText, unit: "kcal", palette: palette, accent: "#17343B")
-            HomeMetricTile(iconName: "home_metric_fat", title: "等效燃脂", value: fatText, unit: "g", palette: palette, accent: "#17343B")
+            HomeMetricTile(iconName: "home_metric_calories", title: app.localized("卡路里", "Calories", "Calories", "แคลอรี"), value: caloriesText, unit: "kcal", palette: palette, accent: "#17343B")
+            HomeMetricTile(iconName: "home_metric_fat", title: app.localized("等效燃脂", "Fat Burn", "Graisse brûlée", "ไขมันที่เผาผลาญ"), value: fatText, unit: "g", palette: palette, accent: "#17343B")
         }
     }
 
     private func trainingProgressRow(_ palette: HitRisePalette) -> some View {
         HStack(spacing: 8) {
-            Text("今日目标:")
+            Text(app.localized("今日目标:", "Today's goal:", "Objectif du jour :", "เป้าวันนี้:"))
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color(hex: "#557A7D"))
-            Text("\(activeTargetHits) 拳")
+            Text(punchCountText(activeTargetHits))
                 .font(.caption.weight(.black))
                 .foregroundStyle(Color(hex: "#17343B"))
-            Text("| 已完成 \(activeCompletedHits) 拳")
+            Text("| \(app.localized("已完成", "Done", "Fait", "ทำแล้ว")) \(punchCountText(activeCompletedHits))")
                 .font(.caption.weight(.black))
                 .foregroundStyle(Color(hex: "#17343B"))
             MiniProgressBar(progress: min(1, Double(activeCompletedHits) / Double(max(activeTargetHits, 1))))
@@ -259,15 +259,15 @@ struct TrainingDashboardView: View {
 
     private func comboRecognitionRow(_ palette: HitRisePalette) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("连击识别")
+            Text(app.localized("连击识别", "Combo Recognition", "Reconnaissance des combos", "การจดจำคอมโบ"))
                 .font(.caption.weight(.black))
                 .foregroundStyle(Color(hex: "#17343B"))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 7) {
-                    comboPill("重击", "\(comboValue("heavy_hit"))", fill: "#F5FFFC", stroke: "#CDEFE8", text: "#557A7D")
-                    comboPill("速击", "\(comboValue("fast_combo"))", fill: "#DFFFF7", stroke: "#BCEFE6", text: "#0B9F91")
-                    comboPill("三连击", nil, fill: "#F5FFFC", stroke: "#CDEFE8", text: "#557A7D")
-                    comboPill("爆发连击", "\(app.training.latestReport?.bestBurstCount ?? app.training.comboSummary["sixteen_chain"] ?? 0)", fill: "#FF784B", stroke: "#FF784B", text: "#FFFFFF")
+                    comboPill(app.localized("重击", "Heavy", "Puissant", "หนัก"), "\(comboValue("heavy_hit"))", fill: "#F5FFFC", stroke: "#CDEFE8", text: "#557A7D")
+                    comboPill(app.localized("速击", "Fast", "Rapide", "เร็ว"), "\(comboValue("fast_combo"))", fill: "#DFFFF7", stroke: "#BCEFE6", text: "#0B9F91")
+                    comboPill(app.localized("三连击", "Triple", "Triple", "สามต่อ"), nil, fill: "#F5FFFC", stroke: "#CDEFE8", text: "#557A7D")
+                    comboPill(app.localized("爆发连击", "Burst", "Rafale", "ระเบิด"), "\(app.training.latestReport?.bestBurstCount ?? app.training.comboSummary["sixteen_chain"] ?? 0)", fill: "#FF784B", stroke: "#FF784B", text: "#FFFFFF")
                 }
             }
         }
@@ -356,7 +356,7 @@ struct TrainingDashboardView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("连接状态 / 最新战报")
+                Text(app.localized("连接状态 / 最新战报", "Connection / Latest Report", "Connexion / Dernier rapport", "การเชื่อมต่อ / รายงานล่าสุด"))
                     .font(.headline.weight(.black))
                     .foregroundStyle(Color(hex: "#17343B"))
                 Text(connectionStatusText)
@@ -366,7 +366,7 @@ struct TrainingDashboardView: View {
                     .minimumScaleFactor(0.72)
                     .padding(.trailing, 48)
                 HStack(spacing: 8) {
-                    homeMiniMetric("本次拳数", value: reportHitsText)
+                    homeMiniMetric(app.localized("本次拳数", "Punches", "Coups", "หมัดครั้งนี้"), value: reportHitsText)
                     homeMiniMetric(app.localized("峰值评分", "Peak score", "Score max.", "คะแนนสูงสุด"), value: reportPeakText)
                     homeMiniMetric(app.localized("平均评分", "Average score", "Score moyen", "คะแนนเฉลี่ย"), value: reportAverageText)
                 }
@@ -393,11 +393,11 @@ struct TrainingDashboardView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
             VStack(alignment: .leading, spacing: 12) {
-                Text("目标与成就")
+                Text(app.localized("目标与成就", "Goals & Achievements", "Objectifs et succès", "เป้าหมายและความสำเร็จ"))
                     .font(.headline.weight(.black))
                     .foregroundStyle(Color(hex: "#17343B"))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("今日已完成")
+                    Text(app.localized("今日已完成", "Done today", "Fait aujourd'hui", "วันนี้ทำแล้ว"))
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color(hex: "#7FA0A3"))
                     Text("\(goalPercent)%")
@@ -466,25 +466,30 @@ struct TrainingDashboardView: View {
 
     @ViewBuilder
     private func latestReportCard(_ palette: HitRisePalette) -> some View {
-        HitRiseSectionTitle(title: "回合训练战报", subtitle: nil, palette: palette)
+        HitRiseSectionTitle(title: app.localized("回合训练战报", "Round Training Report", "Rapport des rounds", "รายงานการฝึกรายรอบ"), subtitle: nil, palette: palette)
         if let report = app.training.latestReport {
             HitRiseCard(palette: palette, stroke: "#CDEFE8", fill: "#FFFFFF", padding: 16) {
                 HStack {
                     HitRiseBadge(
-                        text: "第 \(max(report.completedRounds, 1))/\(max(report.totalRounds, 1)) 回合",
+                        text: roundBadgeText(current: max(report.completedRounds, 1), total: max(report.totalRounds, 1)),
                         palette: palette,
                         fill: "#E4FFF9",
                         textColor: "#0A9D90"
                     )
                     Spacer()
-                    HitRiseBadge(text: "\(report.totalHits) 次", palette: palette, fill: "#FF9B42", textColor: "#FFFFFF")
+                    HitRiseBadge(text: hitCountText(report.totalHits), palette: palette, fill: "#FF9B42", textColor: "#FFFFFF")
                 }
 
                 VStack(spacing: 6) {
-                    Text("第 \(max(report.completedRounds, 1)) 回合训练战报")
+                    Text(reportTitleText(round: max(report.completedRounds, 1)))
                         .font(.title3.weight(.black))
                         .foregroundStyle(Color(hex: "#17343B"))
-                    Text("累计锻炼 \(durationText(report.durationSeconds)) | 累计 \(report.totalHits) 拳 | \(String(format: "%.1f", report.caloriesBurned)) kcal | 等效燃脂 \(String(format: "%.1f", report.fatBurnedGrams)) g")
+                    Text(reportSummaryText(
+                        durationSeconds: report.durationSeconds,
+                        hits: report.totalHits,
+                        calories: report.caloriesBurned,
+                        fatGrams: report.fatBurnedGrams
+                    ))
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color(hex: "#557A7D"))
                         .multilineTextAlignment(.center)
@@ -492,23 +497,23 @@ struct TrainingDashboardView: View {
                 .frame(maxWidth: .infinity)
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    reportMetric("累计锻炼时间", durationText(report.durationSeconds), "#22C8BA")
-                    reportMetric("累计击拳数", "\(report.totalHits) 次", "#22C8BA")
+                    reportMetric(app.localized("累计锻炼时间", "Training Time", "Temps d'entraînement", "เวลาฝึกรวม"), durationText(report.durationSeconds), "#22C8BA")
+                    reportMetric(app.localized("累计击拳数", "Total Punches", "Total de coups", "หมัดรวม"), hitCountText(report.totalHits), "#22C8BA")
                     reportMetric(app.localized("相对力量峰值评分", "Peak Relative Power Score", "Score relatif max.", "คะแนนพลังสัมพัทธ์สูงสุด"), forceText(report.peakForceN), "#E85E58")
                     reportMetric(app.localized("平均相对力量评分", "Average Relative Power Score", "Score relatif moyen", "คะแนนพลังสัมพัทธ์เฉลี่ย"), forceText(report.avgForceN), "#22C8BA")
-                    reportMetric("消耗卡路里", "\(String(format: "%.1f", report.caloriesBurned)) kcal", "#78D98D")
-                    reportMetric("等效燃脂", "\(String(format: "%.1f", report.fatBurnedGrams)) g", "#E5C859")
-                    reportMetric("平均 BPM", "\(Int(report.avgBpm.rounded()))", "#56BFEA")
-                    reportMetric("最佳连击", "\(report.bestBurstCount) 次", "#E5C859")
+                    reportMetric(app.localized("消耗卡路里", "Calories Burned", "Calories brûlées", "แคลอรีที่เผาผลาญ"), "\(String(format: "%.1f", report.caloriesBurned)) kcal", "#78D98D")
+                    reportMetric(app.localized("等效燃脂", "Fat Burn", "Graisse brûlée", "ไขมันที่เผาผลาญ"), "\(String(format: "%.1f", report.fatBurnedGrams)) g", "#E5C859")
+                    reportMetric(app.localized("平均 BPM", "Average BPM", "BPM moyen", "BPM เฉลี่ย"), "\(Int(report.avgBpm.rounded()))", "#56BFEA")
+                    reportMetric(app.localized("最佳连击", "Best Combo", "Meilleur combo", "คอมโบดีที่สุด"), hitCountText(report.bestBurstCount), "#E5C859")
                 }
 
                 if !report.roundReports.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("回合累计战报")
+                        Text(app.localized("回合累计战报", "Round Breakdown", "Détail par round", "สรุปรายรอบ"))
                             .font(.caption.weight(.black))
                             .foregroundStyle(Color(hex: "#17343B"))
                         ForEach(report.roundReports.prefix(4)) { round in
-                            Text("第 \(round.roundIndex) 回合：累计 \(durationText(round.durationSeconds)) | \(round.totalHits) 拳 | \(String(format: "%.1f", round.caloriesBurned)) kcal | 等效燃脂 \(String(format: "%.1f", round.fatBurnedGrams)) g")
+                            Text(roundLineText(round))
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(Color(hex: "#557A7D"))
                         }
@@ -519,7 +524,12 @@ struct TrainingDashboardView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(hex: "#D6F2EC"), lineWidth: 1))
                 }
 
-                Text("训练已记录，今天的节奏又往前推进了一步。连续训练 \(app.trainingStreak) 天，XP +10。")
+                Text(app.localized(
+                    "训练已记录，今天的节奏又往前推进了一步。连续训练 \(app.trainingStreak) 天，XP +10。",
+                    "Training saved. You pushed your rhythm forward today. \(app.trainingStreak)-day streak, XP +10.",
+                    "Entraînement enregistré. Votre rythme progresse aujourd'hui. Série de \(app.trainingStreak) j, XP +10.",
+                    "บันทึกการฝึกแล้ว วันนี้จังหวะของคุณก้าวหน้าขึ้นอีกขั้น ฝึกต่อเนื่อง \(app.trainingStreak) วัน XP +10"
+                ))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color(hex: "#855F12"))
                     .padding(12)
@@ -528,7 +538,7 @@ struct TrainingDashboardView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(hex: "#F4D48A"), lineWidth: 1))
 
                 ShareLink(item: shareText(report)) {
-                    Text("分享战报")
+                    Text(app.localized("分享战报", "Share Report", "Partager le rapport", "แชร์รายงาน"))
                         .font(.headline.weight(.black))
                         .foregroundStyle(Color.white)
                         .frame(maxWidth: .infinity)
@@ -539,7 +549,7 @@ struct TrainingDashboardView: View {
             }
         } else {
             HitRiseCard(palette: palette, stroke: "#CDEFE8", fill: "#FFFFFF") {
-                Text("暂无训练报告。连接设备后开始一组训练。")
+                Text(app.localized("暂无训练报告。连接设备后开始一组训练。", "No training report yet. Connect your device and start a session.", "Aucun rapport pour l'instant. Connectez l'appareil et lancez une séance.", "ยังไม่มีรายงานการฝึก เชื่อมต่ออุปกรณ์แล้วเริ่มฝึกได้เลย"))
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color(hex: palette.textMuted))
             }
@@ -565,9 +575,9 @@ struct TrainingDashboardView: View {
     }
     private var statusLine: String {
         if let device = app.ble.connectedDevice {
-            return "已连接 \(device.name) | \(app.ble.statusMessage)"
+            return "\(app.localized("已连接", "Connected", "Connecté", "เชื่อมต่อแล้ว")) \(device.name) | \(app.ble.statusMessage)"
         }
-        return "请先连接立式拳击速度球"
+        return app.localized("请先连接立式拳击速度球", "Please connect the boxing speed ball first", "Connectez d'abord le punching-ball", "โปรดเชื่อมต่อลูกบอลชกมวยก่อน")
     }
 
     private var activeCompletedHits: Int {
@@ -624,7 +634,7 @@ struct TrainingDashboardView: View {
     private var phaseCaption: String {
         switch app.training.phase {
         case .resting(_, let seconds):
-            return "休息 \(seconds)s"
+            return app.localized("休息 \(seconds)s", "Rest \(seconds)s", "Repos \(seconds)s", "พัก \(seconds) วิ")
         default:
             return app.training.phase.title
         }
@@ -640,7 +650,9 @@ struct TrainingDashboardView: View {
         case .levelChallenge:
             return "LEVEL \(app.trainingLevel)"
         case .dailyChallenge:
-            return app.dailyTargetDone ? "今日已完成" : "每日挑战"
+            return app.dailyTargetDone
+                ? app.localized("今日已完成", "Done today", "Fait aujourd'hui", "วันนี้ทำแล้ว")
+                : app.localized("每日挑战", "Daily Challenge", "Défi du jour", "ท้าทายประจำวัน")
         default:
             return app.training.selectedPlayMode.title
         }
@@ -649,20 +661,33 @@ struct TrainingDashboardView: View {
     private var heroTitle: String {
         switch app.training.selectedPlayMode {
         case .levelChallenge:
-            return "目标 \(app.levelTargetHits()) 拳，升级到下一关"
+            let target = app.levelTargetHits()
+            return app.localized("目标 \(target) 拳，升级到下一关", "Hit \(target) punches to reach the next level", "\(target) coups pour passer au niveau suivant", "ออกหมัด \(target) ครั้งเพื่อผ่านด่านถัดไป")
         case .dailyChallenge:
-            return "今日目标 \(app.dailyTargetHits()) 拳"
+            let target = app.dailyTargetHits()
+            return app.localized("今日目标 \(target) 拳", "Today's goal: \(target) punches", "Objectif du jour : \(target) coups", "เป้าวันนี้ \(target) หมัด")
         default:
-            return "立式拳击速度球训练"
+            return app.localized("立式拳击速度球训练", "Boxing Speed Ball Training", "Entraînement au punching-ball", "ฝึกลูกบอลชกมวย")
         }
     }
 
     private var heroSummary: String {
-        "回合 \(app.training.selectedSetup.label) | \(app.training.selectedSetup.rhythmMode.title)模式 | \(app.training.selectedSetup.bpm) BPM"
+        let setup = app.training.selectedSetup
+        return app.localized(
+            "回合 \(setup.label) | \(setup.rhythmMode.title)模式 | \(setup.bpm) BPM",
+            "Rounds \(setup.label) | \(setup.rhythmMode.title) mode | \(setup.bpm) BPM",
+            "Rounds \(setup.label) | Mode \(setup.rhythmMode.title) | \(setup.bpm) BPM",
+            "รอบ \(setup.label) | โหมด\(setup.rhythmMode.title) | \(setup.bpm) BPM"
+        )
     }
 
     private var heroProgress: String {
-        "等级 \(app.trainingLevel) | XP \(app.trainingXP) | 连续 \(app.trainingStreak) 天"
+        app.localized(
+            "等级 \(app.trainingLevel) | XP \(app.trainingXP) | 连续 \(app.trainingStreak) 天",
+            "Level \(app.trainingLevel) | XP \(app.trainingXP) | \(app.trainingStreak)-day streak",
+            "Niveau \(app.trainingLevel) | XP \(app.trainingXP) | Série de \(app.trainingStreak) j",
+            "ระดับ \(app.trainingLevel) | XP \(app.trainingXP) | ต่อเนื่อง \(app.trainingStreak) วัน"
+        )
     }
 
     private func shareText(_ report: TrainingReport) -> String {
@@ -676,9 +701,15 @@ struct TrainingDashboardView: View {
 
     private var connectionStatusText: String {
         if let device = app.ble.connectedDevice {
-            return "\(device.name)·电量 \(app.ble.latestTelemetry?.batteryText ?? "--")·已连接"
+            let battery = app.ble.latestTelemetry?.batteryText ?? "--"
+            return app.localized(
+                "\(device.name)·电量 \(battery)·已连接",
+                "\(device.name) · Battery \(battery) · Connected",
+                "\(device.name) · Batterie \(battery) · Connecté",
+                "\(device.name) · แบตเตอรี่ \(battery) · เชื่อมต่อแล้ว"
+            )
         }
-        return "没有连接蓝牙设备"
+        return app.localized("没有连接蓝牙设备", "No Bluetooth device connected", "Aucun appareil Bluetooth connecté", "ไม่ได้เชื่อมต่ออุปกรณ์บลูทูธ")
     }
 
     private var reportHitsText: String {
@@ -715,9 +746,10 @@ struct TrainingDashboardView: View {
 
     private var nextBadgeText: String {
         if let next = app.achievements.filter({ !$0.unlocked }).sorted(by: { $0.sortOrder < $1.sortOrder }).first {
-            return "下一枚徽章：\(achievementName(next.key))"
+            let name = achievementName(next.key)
+            return app.localized("下一枚徽章：\(name)", "Next badge: \(name)", "Prochain badge : \(name)", "เหรียญถัดไป: \(name)")
         }
-        return "全部徽章已解锁"
+        return app.localized("全部徽章已解锁", "All badges unlocked", "Tous les badges débloqués", "ปลดล็อกเหรียญครบแล้ว")
     }
 
     private func achievementName(_ key: String) -> String {
@@ -729,10 +761,62 @@ struct TrainingDashboardView: View {
     }
 
     private func durationText(_ seconds: Int) -> String {
+        let minutes = seconds / 60
+        let remainder = seconds % 60
         if seconds >= 60 {
-            return "\(seconds / 60)分\(seconds % 60)秒"
+            return app.localized("\(minutes)分\(remainder)秒", "\(minutes)m \(remainder)s", "\(minutes) min \(remainder) s", "\(minutes) นาที \(remainder) วิ")
         }
-        return "\(seconds)秒"
+        return app.localized("\(seconds)秒", "\(seconds)s", "\(seconds) s", "\(seconds) วิ")
+    }
+
+    private var trainingSettingsTitle: String {
+        app.localized("训练设置", "Training Settings", "Réglages", "ตั้งค่าการฝึก")
+    }
+
+    private var hitUnit: String {
+        app.localized("次", "hits", "coups", "ครั้ง")
+    }
+
+    private func hitCountText(_ count: Int) -> String {
+        app.localized("\(count) 次", "\(count) hits", "\(count) coups", "\(count) ครั้ง")
+    }
+
+    private func punchCountText(_ count: Int) -> String {
+        app.localized("\(count) 拳", "\(count) punches", "\(count) coups", "\(count) หมัด")
+    }
+
+    private func roundBadgeText(current: Int, total: Int) -> String {
+        app.localized("第 \(current) / \(total) 回合", "Round \(current) / \(total)", "Round \(current) / \(total)", "รอบ \(current) / \(total)")
+    }
+
+    private func reportTitleText(round: Int) -> String {
+        app.localized("第 \(round) 回合训练战报", "Round \(round) Training Report", "Rapport du round \(round)", "รายงานการฝึกรอบที่ \(round)")
+    }
+
+    private func reportSummaryText(durationSeconds: Int, hits: Int, calories: Double, fatGrams: Double) -> String {
+        let duration = durationText(durationSeconds)
+        let kcal = String(format: "%.1f", calories)
+        let fat = String(format: "%.1f", fatGrams)
+        return app.localized(
+            "累计锻炼 \(duration) | 累计 \(hits) 拳 | \(kcal) kcal | 等效燃脂 \(fat) g",
+            "Time \(duration) | \(hits) punches | \(kcal) kcal | Fat burn \(fat) g",
+            "Durée \(duration) | \(hits) coups | \(kcal) kcal | Graisse \(fat) g",
+            "เวลา \(duration) | \(hits) หมัด | \(kcal) kcal | ไขมัน \(fat) g"
+        )
+    }
+
+    private func roundLineText(_ round: TrainingRoundReport) -> String {
+        let duration = durationText(round.durationSeconds)
+        let kcal = String(format: "%.1f", round.caloriesBurned)
+        let fat = String(format: "%.1f", round.fatBurnedGrams)
+        let index = round.roundIndex
+        let hits = round.totalHits
+        return app.localized(
+            "第 \(index) 回合：累计 \(duration) | \(hits) 拳 | \(kcal) kcal | 等效燃脂 \(fat) g",
+            "Round \(index): \(duration) | \(hits) punches | \(kcal) kcal | Fat burn \(fat) g",
+            "Round \(index) : \(duration) | \(hits) coups | \(kcal) kcal | Graisse \(fat) g",
+            "รอบที่ \(index): \(duration) | \(hits) หมัด | \(kcal) kcal | ไขมัน \(fat) g"
+        )
     }
 }
 
@@ -910,10 +994,10 @@ struct TrainingSetupView: View {
                 ScrollView {
                     VStack(spacing: 14) {
                         HitRiseCard(palette: palette) {
-                            stepperRow("训练分钟", value: $setup.workMinutes, range: 1...10, suffix: "min")
-                            stepperRow("休息间隔", value: $setup.restHalfMinutes, range: 0...10, suffix: "x30s")
-                            stepperRow("回合数", value: $setup.rounds, range: 1...10, suffix: "rounds")
-                            Picker("节奏模式", selection: $setup.rhythmMode) {
+                            stepperRow(app.localized("训练分钟", "Work minutes", "Minutes d'effort", "นาทีที่ฝึก"), value: $setup.workMinutes, range: 1...10, suffix: "min")
+                            stepperRow(app.localized("休息间隔", "Rest interval", "Repos", "ช่วงพัก"), value: $setup.restHalfMinutes, range: 0...10, suffix: "x30s")
+                            stepperRow(app.localized("回合数", "Rounds", "Rounds", "จำนวนรอบ"), value: $setup.rounds, range: 1...10, suffix: "rounds")
+                            Picker(app.localized("节奏模式", "Rhythm mode", "Mode rythme", "โหมดจังหวะ"), selection: $setup.rhythmMode) {
                                 ForEach(TrainingRhythmMode.allCases) { mode in
                                     Text(mode.title).tag(mode)
                                 }
@@ -921,7 +1005,7 @@ struct TrainingSetupView: View {
                             .pickerStyle(.segmented)
                             stepperRow("BPM", value: $setup.bpm, range: 100...300, suffix: "bpm")
                         }
-                        HitRiseActionButton(title: "保存训练设置", systemImage: "checkmark", palette: palette, fill: palette.accentHot) {
+                        HitRiseActionButton(title: app.localized("保存训练设置", "Save Training Settings", "Enregistrer les réglages", "บันทึกการตั้งค่าการฝึก"), systemImage: "checkmark", palette: palette, fill: palette.accentHot) {
                             app.updateTrainingSetup(setup)
                             dismiss()
                         }
@@ -929,11 +1013,11 @@ struct TrainingSetupView: View {
                     .padding()
                 }
             }
-            .navigationTitle("训练设置")
+            .navigationTitle(app.localized("训练设置", "Training Settings", "Réglages", "ตั้งค่าการฝึก"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("关闭") { dismiss() }
+                    Button(app.localized("关闭", "Close", "Fermer", "ปิด")) { dismiss() }
                 }
             }
         }

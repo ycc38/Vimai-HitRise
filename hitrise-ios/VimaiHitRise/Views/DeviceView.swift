@@ -17,10 +17,10 @@ struct BluetoothPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("蓝牙连接")
+                Text(app.localized("蓝牙连接", "Bluetooth Connection", "Connexion Bluetooth", "การเชื่อมต่อบลูทูธ"))
                     .font(.system(size: 24, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: "#19C5B7"))
-                Text("请先扫描 SENBALL# 设备，连接成功后即可开始训练。")
+                Text(app.localized("请先扫描 SENBALL# 设备，连接成功后即可开始训练。", "Scan for your SENBALL# device. You can start training once it is connected.", "Recherchez votre appareil SENBALL#. Vous pourrez vous entraîner une fois connecté.", "สแกนหาอุปกรณ์ SENBALL# เมื่อเชื่อมต่อสำเร็จก็เริ่มฝึกได้"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color(hex: "#557A7D"))
                     .fixedSize(horizontal: false, vertical: true)
@@ -45,9 +45,10 @@ struct BluetoothPanel: View {
 
             HStack(spacing: 10) {
                 bluetoothButton(
-                    title: "扫描",
+                    title: app.localized("扫描", "Scan", "Scanner", "สแกน"),
                     fill: LinearGradient(colors: [Color(hex: "#67E5DC"), Color(hex: "#13BFAF")], startPoint: .leading, endPoint: .trailing),
                     foreground: .white,
+                    emphasized: true,
                     disabled: app.ble.connectedDevice != nil
                 ) {
                     selectedDeviceId = nil
@@ -55,7 +56,7 @@ struct BluetoothPanel: View {
                 }
 
                 bluetoothButton(
-                    title: "连接",
+                    title: app.localized("连接", "Connect", "Connecter", "เชื่อมต่อ"),
                     fill: LinearGradient(colors: [Color.white, Color.white], startPoint: .leading, endPoint: .trailing),
                     foreground: Color(hex: "#8AA0A1"),
                     disabled: app.ble.connectedDevice != nil || selectedDevice == nil
@@ -66,7 +67,7 @@ struct BluetoothPanel: View {
                 }
 
                 bluetoothButton(
-                    title: "断开",
+                    title: app.localized("断开", "Disconnect", "Déconnecter", "ตัดการเชื่อมต่อ"),
                     fill: LinearGradient(colors: [Color(hex: "#F8C8C4"), Color(hex: "#F0A5A0")], startPoint: .leading, endPoint: .trailing),
                     foreground: .white,
                     disabled: app.ble.connectedDevice == nil
@@ -79,8 +80,8 @@ struct BluetoothPanel: View {
 
             if let telemetry = app.ble.latestTelemetry, app.ble.connectedDevice != nil {
                 HStack(spacing: 10) {
-                    bluetoothMetric("电量", value: telemetry.batteryText)
-                    bluetoothMetric("计数", value: "\(telemetry.hitCount)")
+                    bluetoothMetric(app.localized("电量", "Battery", "Batterie", "แบตเตอรี่"), value: telemetry.batteryText)
+                    bluetoothMetric(app.localized("计数", "Count", "Compteur", "จำนวน"), value: "\(telemetry.hitCount)")
                 }
             }
         }
@@ -135,7 +136,7 @@ struct BluetoothPanel: View {
     private var deviceList: some View {
         VStack(spacing: 10) {
             if visibleDevices.isEmpty {
-                Text("未扫描到 SENBALL# 设备")
+                Text(app.localized("未扫描到 SENBALL# 设备", "No SENBALL# device found", "Aucun appareil SENBALL# trouvé", "ไม่พบอุปกรณ์ SENBALL#"))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(Color(hex: "#557A7D"))
                     .padding(.horizontal, 16)
@@ -158,12 +159,12 @@ struct BluetoothPanel: View {
 
     private var statusTitle: String {
         if let device = app.ble.connectedDevice {
-            return "蓝牙已连接 \(device.name)"
+            return app.localized("蓝牙已连接 \(device.name)", "Connected to \(device.name)", "Connecté à \(device.name)", "เชื่อมต่อ \(device.name) แล้ว")
         }
         if app.ble.bluetoothState != .poweredOn {
-            return "蓝牙未开启"
+            return app.localized("蓝牙未开启", "Bluetooth is off", "Bluetooth désactivé", "บลูทูธปิดอยู่")
         }
-        return "蓝牙已断开"
+        return app.localized("蓝牙已断开", "Bluetooth disconnected", "Bluetooth déconnecté", "บลูทูธตัดการเชื่อมต่อแล้ว")
     }
 
     private var visibleDevices: [SensorBallDeviceInfo] {
@@ -188,6 +189,7 @@ struct BluetoothPanel: View {
         title: String,
         fill: LinearGradient,
         foreground: Color,
+        emphasized: Bool = false,
         disabled: Bool,
         action: @escaping () -> Void
     ) -> some View {
@@ -201,7 +203,7 @@ struct BluetoothPanel: View {
                     Capsule()
                         .fill(fill)
                         .overlay(Capsule().stroke(Color(hex: "#E2F2EF"), lineWidth: 1))
-                        .shadow(color: Color.black.opacity(title == "扫描" ? 0.14 : 0.08), radius: 7, x: 0, y: 4)
+                        .shadow(color: Color.black.opacity(emphasized ? 0.14 : 0.08), radius: 7, x: 0, y: 4)
                 )
         }
         .buttonStyle(.plain)

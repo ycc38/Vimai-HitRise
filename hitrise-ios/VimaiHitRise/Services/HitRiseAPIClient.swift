@@ -137,7 +137,7 @@ enum APIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "服务器响应无效"
+            return localizedText("服务器响应无效", "Invalid server response", "Réponse du serveur invalide", "การตอบกลับจากเซิร์ฟเวอร์ไม่ถูกต้อง")
         case .server(let message):
             return message
         }

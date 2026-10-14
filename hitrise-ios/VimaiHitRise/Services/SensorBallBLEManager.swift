@@ -7,7 +7,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
     @Published private(set) var devices: [SensorBallDeviceInfo] = []
     @Published private(set) var connectedDevice: SensorBallDeviceInfo?
     @Published private(set) var latestTelemetry: SensorBallTelemetry?
-    @Published var statusMessage: String = "蓝牙未初始化"
+    @Published var status = LocalizedText("蓝牙未初始化", "Bluetooth not initialized", "Bluetooth non initialisé", "บลูทูธยังไม่เริ่มทำงาน")
     @Published private(set) var lastScanDebugText: String = ""
 
     private var central: CBCentralManager!
@@ -26,13 +26,17 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         central = CBCentralManager(delegate: self, queue: .main)
     }
 
+    var statusMessage: String {
+        status.text
+    }
+
     var isReadyForCounting: Bool {
         connectedDevice != nil && writableCharacteristic != nil && !writeInFlight
     }
 
     func startScan() {
         guard central.state == .poweredOn else {
-            statusMessage = "请先开启蓝牙"
+            status = LocalizedText("请先开启蓝牙", "Please turn on Bluetooth", "Veuillez activer le Bluetooth", "โปรดเปิดบลูทูธ")
             return
         }
         devices.removeAll()
@@ -40,7 +44,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         lastScanDebugText = ""
         isAutoReconnectScan = false
         central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
-        statusMessage = "正在扫描附近 BLE 设备..."
+        status = LocalizedText("正在扫描附近 BLE 设备...", "Scanning nearby BLE devices...", "Recherche des appareils BLE à proximité...", "กำลังสแกนอุปกรณ์ BLE ใกล้เคียง...")
     }
 
     func stopScan() {
@@ -49,7 +53,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
 
     func connect(to device: SensorBallDeviceInfo) {
         guard let peripheral = peripherals[device.id] else {
-            statusMessage = "设备已离线，请重新扫描"
+            status = LocalizedText("设备已离线，请重新扫描", "Device is offline. Please scan again.", "Appareil hors ligne. Relancez la recherche.", "อุปกรณ์ออฟไลน์ โปรดสแกนใหม่")
             return
         }
         stopScan()
@@ -57,7 +61,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         notifiedCharacteristicKeys.removeAll()
         pendingGyroCommand = nil
         writeInFlight = false
-        statusMessage = "正在连接 \(device.name)..."
+        status = LocalizedText("正在连接 \(device.name)...", "Connecting \(device.name)...", "Connexion à \(device.name)...", "กำลังเชื่อมต่อ \(device.name)...")
         central.connect(peripheral, options: nil)
     }
 
@@ -76,7 +80,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         guard let deviceId = connectedDevice?.id,
               let peripheral = peripherals[deviceId],
               let characteristic = writableCharacteristic else {
-            statusMessage = "蓝牙计数通道未就绪"
+            status = LocalizedText("蓝牙计数通道未就绪", "Bluetooth counting channel not ready", "Canal de comptage Bluetooth non prêt", "ช่องนับบลูทูธยังไม่พร้อม")
             pendingGyroCommand = enabled
             return false
         }
@@ -88,7 +92,9 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         let type: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
         peripheral.writeValue(payload, for: characteristic, type: type)
         writeInFlight = type == .withResponse
-        statusMessage = enabled ? "已发送开启计数指令" : "已发送关闭计数指令"
+        status = enabled
+            ? LocalizedText("已发送开启计数指令", "Start counting command sent", "Commande de démarrage du comptage envoyée", "ส่งคำสั่งเริ่มนับแล้ว")
+            : LocalizedText("已发送关闭计数指令", "Stop counting command sent", "Commande d'arrêt du comptage envoyée", "ส่งคำสั่งหยุดนับแล้ว")
         if type == .withoutResponse {
             flushPendingGyroCommand()
         }
@@ -352,7 +358,7 @@ final class SensorBallBLEManager: NSObject, ObservableObject {
         }
         isAutoReconnectScan = true
         central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
-        statusMessage = "正在查找上次连接的设备..."
+        status = LocalizedText("正在查找上次连接的设备...", "Looking for the last connected device...", "Recherche du dernier appareil connecté...", "กำลังค้นหาอุปกรณ์ที่เชื่อมต่อล่าสุด...")
     }
 
     private func matchesSavedDevice(_ device: SensorBallDeviceInfo) -> Bool {
@@ -382,16 +388,16 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
         bluetoothState = central.state
         switch central.state {
         case .poweredOn:
-            statusMessage = "蓝牙已开启"
+            status = LocalizedText("蓝牙已开启", "Bluetooth is on", "Bluetooth activé", "บลูทูธเปิดอยู่")
             reconnectLastDevice()
         case .poweredOff:
-            statusMessage = "蓝牙已关闭"
+            status = LocalizedText("蓝牙已关闭", "Bluetooth is off", "Bluetooth désactivé", "บลูทูธปิดอยู่")
         case .unauthorized:
-            statusMessage = "蓝牙权限未授权"
+            status = LocalizedText("蓝牙权限未授权", "Bluetooth permission not granted", "Autorisation Bluetooth refusée", "ยังไม่ได้รับสิทธิ์บลูทูธ")
         case .unsupported:
-            statusMessage = "当前设备不支持 BLE"
+            status = LocalizedText("当前设备不支持 BLE", "This device does not support BLE", "Cet appareil ne prend pas en charge le BLE", "อุปกรณ์นี้ไม่รองรับ BLE")
         default:
-            statusMessage = "蓝牙状态初始化中"
+            status = LocalizedText("蓝牙状态初始化中", "Initializing Bluetooth...", "Initialisation du Bluetooth...", "กำลังเริ่มบลูทูธ...")
         }
     }
 
@@ -419,19 +425,30 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
         }
         isAutoReconnectScan = false
         autoReconnectFailureCount = 0
-        statusMessage = "已连接，正在发现服务..."
+        status = LocalizedText("已连接，正在发现服务...", "Connected. Discovering services...", "Connecté. Recherche des services...", "เชื่อมต่อแล้ว กำลังค้นหาบริการ...")
         peripheral.discoverServices(nil)
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        statusMessage = "连接失败：\(error?.localizedDescription ?? "未知错误")"
+        let reason = error?.localizedDescription
+        status = LocalizedText(
+            "连接失败：\(reason ?? "未知错误")",
+            "Connection failed: \(reason ?? "Unknown error")",
+            "Échec de la connexion : \(reason ?? "Erreur inconnue")",
+            "เชื่อมต่อไม่สำเร็จ: \(reason ?? "ข้อผิดพลาดที่ไม่ทราบสาเหตุ")"
+        )
         connectedDevice = nil
         autoReconnectFailureCount += 1
         startAutoReconnectScan()
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        statusMessage = error == nil ? "蓝牙已断开" : "蓝牙断开：\(error!.localizedDescription)"
+        if let error {
+            let reason = error.localizedDescription
+            status = LocalizedText("蓝牙断开：\(reason)", "Bluetooth disconnected: \(reason)", "Bluetooth déconnecté : \(reason)", "บลูทูธตัดการเชื่อมต่อ: \(reason)")
+        } else {
+            status = LocalizedText("蓝牙已断开", "Bluetooth disconnected", "Bluetooth déconnecté", "บลูทูธตัดการเชื่อมต่อแล้ว")
+        }
         connectedDevice = nil
         writableCharacteristic = nil
         pendingGyroCommand = nil
@@ -442,7 +459,8 @@ extension SensorBallBLEManager: CBCentralManagerDelegate {
 extension SensorBallBLEManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let error {
-            statusMessage = "发现服务失败：\(error.localizedDescription)"
+            let reason = error.localizedDescription
+            status = LocalizedText("发现服务失败：\(reason)", "Service discovery failed: \(reason)", "Échec de la recherche des services : \(reason)", "ค้นหาบริการไม่สำเร็จ: \(reason)")
             return
         }
         peripheral.services?.forEach { service in
@@ -452,15 +470,16 @@ extension SensorBallBLEManager: CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let error {
-            statusMessage = "发现通道失败：\(error.localizedDescription)"
+            let reason = error.localizedDescription
+            status = LocalizedText("发现通道失败：\(reason)", "Characteristic discovery failed: \(reason)", "Échec de la recherche des canaux : \(reason)", "ค้นหาช่องสัญญาณไม่สำเร็จ: \(reason)")
             return
         }
         service.characteristics?.forEach { configure(characteristic: $0, on: peripheral) }
         if writableCharacteristic != nil {
-            statusMessage = "蓝牙已就绪"
+            status = LocalizedText("蓝牙已就绪", "Bluetooth ready", "Bluetooth prêt", "บลูทูธพร้อมแล้ว")
             flushPendingGyroCommand()
         } else {
-            statusMessage = "已连接，等待可写入计数通道"
+            status = LocalizedText("已连接，等待可写入计数通道", "Connected. Waiting for a writable counting channel.", "Connecté. En attente d'un canal de comptage inscriptible.", "เชื่อมต่อแล้ว กำลังรอช่องนับที่เขียนได้")
         }
     }
 
@@ -476,7 +495,8 @@ extension SensorBallBLEManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         writeInFlight = false
         if let error {
-            statusMessage = "写入计数指令失败：\(error.localizedDescription)"
+            let reason = error.localizedDescription
+            status = LocalizedText("写入计数指令失败：\(reason)", "Failed to send counting command: \(reason)", "Échec de l'envoi de la commande de comptage : \(reason)", "ส่งคำสั่งนับไม่สำเร็จ: \(reason)")
         }
         flushPendingGyroCommand()
     }

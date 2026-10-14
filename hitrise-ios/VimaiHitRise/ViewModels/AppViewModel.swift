@@ -17,16 +17,18 @@ final class AppViewModel: NSObject, ObservableObject {
     @Published var leaderboardMe: CloudLeaderboardEntry?
     @Published var achievements: [CloudAchievementItem] = []
     @Published var tier: CloudTierProgress?
-    @Published var cloudMessage: String = "云端未同步"
+    @Published var cloudMessageText = LocalizedText("云端未同步", "Cloud not synced", "Cloud non synchronisé", "ยังไม่ได้ซิงก์คลาวด์")
     @Published var isCloudBusy = false
     @Published var selectedLeaderboardBoard = "total_hits"
     @Published var selectedPaletteId = HitRisePalette.defaultId
-    @Published var selectedLanguage = "zh"
+    @Published var selectedLanguage = "zh" {
+        didSet { AppLanguage.code = selectedLanguage }
+    }
     @Published var selectedSoundEffectId = "sfx_gym"
     @Published var selectedBackgroundMusicId = "none"
     @Published var soundEffects: [CloudSoundAsset] = []
     @Published var backgroundMusic: [CloudSoundAsset] = []
-    @Published var audioMessage = "音频目录待同步"
+    @Published var audioMessageText = LocalizedText("音频目录待同步", "Audio catalog not synced", "Catalogue audio non synchronisé", "ยังไม่ได้ซิงก์รายการเสียง")
     @Published var trainingLevel = 1
     @Published var trainingXP = 0
     @Published var trainingStreak = 0
@@ -67,6 +69,14 @@ final class AppViewModel: NSObject, ObservableObject {
         HitRisePalette.byId(selectedPaletteId)
     }
 
+    var cloudMessage: String {
+        cloudMessageText.text
+    }
+
+    var audioMessage: String {
+        audioMessageText.text
+    }
+
     var hasCloudConsent: Bool {
         cloudConsentState == .accepted
     }
@@ -91,12 +101,7 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     func localized(_ zh: String, _ en: String, _ fr: String, _ th: String) -> String {
-        switch selectedLanguage {
-        case "en": return en
-        case "fr": return fr
-        case "th": return th
-        default: return zh
-        }
+        localizedText(zh, en, fr, th)
     }
 
     init(api: HitRiseAPIClient = HitRiseAPIClient()) {
@@ -113,15 +118,20 @@ final class AppViewModel: NSObject, ObservableObject {
 
     func bootstrap() async {
         guard hasCloudConsent else {
-            cloudMessage = "云端训练记录与排行榜未开启"
+            cloudMessageText = LocalizedText(
+                "云端训练记录与排行榜未开启",
+                "Cloud training records and leaderboard are off",
+                "Historique cloud et classement désactivés",
+                "ยังไม่ได้เปิดบันทึกการฝึกบนคลาวด์และกระดานจัดอันดับ"
+            )
             return
         }
-        await runCloudAction(label: "正在准备本机用户资料...") {
+        await runCloudAction(label: LocalizedText("正在准备本机用户资料...", "Preparing this device profile...", "Préparation du profil de cet appareil...", "กำลังเตรียมโปรไฟล์ของอุปกรณ์นี้...")) {
             let response = try await api.bootstrap(state: identity)
             applyBootstrap(response)
             let board = try await api.fetchLeaderboard(state: identity, boardKey: selectedLeaderboardBoard)
             applyLeaderboard(board)
-            cloudMessage = "云端已同步"
+            cloudMessageText = LocalizedText("云端已同步", "Cloud synced", "Cloud synchronisé", "ซิงก์คลาวด์แล้ว")
         }
         await refreshAudioCatalogs()
     }
@@ -137,17 +147,22 @@ final class AppViewModel: NSObject, ObservableObject {
             Task { await bootstrap() }
         } else {
             clearCloudData()
-            cloudMessage = "云端训练记录与排行榜已关闭"
+            cloudMessageText = LocalizedText(
+                "云端训练记录与排行榜已关闭",
+                "Cloud training records and leaderboard turned off",
+                "Historique cloud et classement désactivés",
+                "ปิดบันทึกการฝึกบนคลาวด์และกระดานจัดอันดับแล้ว"
+            )
         }
     }
 
     func refreshCloudData() async {
-        await runCloudAction(label: "正在刷新云端数据...") {
+        await runCloudAction(label: LocalizedText("正在刷新云端数据...", "Refreshing cloud data...", "Actualisation des données cloud...", "กำลังรีเฟรชข้อมูลคลาวด์...")) {
             let historyResponse = try await api.fetchHistory(state: identity)
             applyBootstrap(historyResponse)
             let board = try await api.fetchLeaderboard(state: identity, boardKey: selectedLeaderboardBoard)
             applyLeaderboard(board)
-            cloudMessage = "刷新完成"
+            cloudMessageText = LocalizedText("刷新完成", "Refresh complete", "Actualisation terminée", "รีเฟรชเสร็จแล้ว")
         }
     }
 
@@ -157,20 +172,30 @@ final class AppViewModel: NSObject, ObservableObject {
             soundEffects = effects.items?.ifEmpty(bundledSoundEffects()) ?? bundledSoundEffects()
             backgroundMusic = [CloudSoundAsset.noMusic]
             enforceFixedAppearanceAndAudioPreferences()
-            audioMessage = "音频目录已同步"
+            audioMessageText = LocalizedText("音频目录已同步", "Audio catalog synced", "Catalogue audio synchronisé", "ซิงก์รายการเสียงแล้ว")
             saveLocalState()
         } catch {
             soundEffects = bundledSoundEffects()
             backgroundMusic = [CloudSoundAsset.noMusic]
             enforceFixedAppearanceAndAudioPreferences()
-            audioMessage = "云端音频不可用，使用内置目录"
+            audioMessageText = LocalizedText(
+                "云端音频不可用，使用内置目录",
+                "Cloud audio unavailable. Using built-in catalog.",
+                "Audio cloud indisponible. Catalogue intégré utilisé.",
+                "เสียงบนคลาวด์ไม่พร้อมใช้งาน ใช้รายการในตัวแทน"
+            )
         }
     }
 
     func startTraining() {
         guard training.canStart else { return }
         guard ble.connectedDevice != nil else {
-            ble.statusMessage = "请先连接立式拳击速度球"
+            ble.status = LocalizedText(
+                "请先连接立式拳击速度球",
+                "Please connect the boxing speed ball first",
+                "Connectez d'abord le punching-ball",
+                "โปรดเชื่อมต่อลูกบอลชกมวยก่อน"
+            )
             return
         }
         trainingTask?.cancel()
@@ -204,7 +229,7 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     func upload(report: TrainingReport) async {
-        await runCloudAction(label: "正在上传训练报告...") {
+        await runCloudAction(label: LocalizedText("正在上传训练报告...", "Uploading training report...", "Envoi du rapport d'entraînement...", "กำลังอัปโหลดรายงานการฝึก...")) {
             let response = try await api.uploadTrainingSession(state: identity, report: report)
             profile = response.profile ?? profile
             statistics = response.statistics ?? statistics
@@ -213,7 +238,7 @@ final class AppViewModel: NSObject, ObservableObject {
             tier = response.tier ?? tier
             let board = try await api.fetchLeaderboard(state: identity, boardKey: selectedLeaderboardBoard)
             applyLeaderboard(board)
-            cloudMessage = "训练已上传"
+            cloudMessageText = LocalizedText("训练已上传", "Training uploaded", "Entraînement envoyé", "อัปโหลดการฝึกแล้ว")
         }
     }
 
@@ -265,7 +290,7 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     func updateProfile(nickname: String, avatarColor: String) async {
-        await runCloudAction(label: "正在更新个人资料...") {
+        await runCloudAction(label: LocalizedText("正在更新个人资料...", "Updating profile...", "Mise à jour du profil...", "กำลังอัปเดตโปรไฟล์...")) {
             let response = try await api.updateProfile(
                 state: identity,
                 nickname: nickname,
@@ -273,7 +298,7 @@ final class AppViewModel: NSObject, ObservableObject {
                 avatarColor: avatarColor
             )
             applyBootstrap(response)
-            cloudMessage = "个人资料已更新"
+            cloudMessageText = LocalizedText("个人资料已更新", "Profile updated", "Profil mis à jour", "อัปเดตโปรไฟล์แล้ว")
         }
     }
 
@@ -286,24 +311,30 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func refreshLeaderboard() async {
-        await runCloudAction(label: "正在刷新排行榜...") {
+        await runCloudAction(label: LocalizedText("正在刷新排行榜...", "Refreshing leaderboard...", "Actualisation du classement...", "กำลังรีเฟรชกระดานจัดอันดับ...")) {
             let board = try await api.fetchLeaderboard(state: identity, boardKey: selectedLeaderboardBoard)
             applyLeaderboard(board)
-            cloudMessage = "排行榜已更新"
+            cloudMessageText = LocalizedText("排行榜已更新", "Leaderboard updated", "Classement mis à jour", "อัปเดตกระดานจัดอันดับแล้ว")
         }
     }
 
-    private func runCloudAction(label: String, action: @MainActor () async throws -> Void) async {
+    private func runCloudAction(label: LocalizedText, action: @MainActor () async throws -> Void) async {
         guard hasCloudConsent else {
-            cloudMessage = "请先在设置中开启云端训练记录与排行榜"
+            cloudMessageText = LocalizedText(
+                "请先在设置中开启云端训练记录与排行榜",
+                "Turn on cloud training records and leaderboard in Settings first",
+                "Activez d'abord l'historique cloud et le classement dans les réglages",
+                "โปรดเปิดบันทึกการฝึกบนคลาวด์และกระดานจัดอันดับในการตั้งค่าก่อน"
+            )
             return
         }
         isCloudBusy = true
-        cloudMessage = label
+        cloudMessageText = label
         do {
             try await action()
         } catch {
-            cloudMessage = "云端失败：\(error.localizedDescription)"
+            let reason = error.localizedDescription
+            cloudMessageText = LocalizedText("云端失败：\(reason)", "Cloud error: \(reason)", "Erreur cloud : \(reason)", "คลาวด์ผิดพลาด: \(reason)")
         }
         isCloudBusy = false
     }
@@ -371,7 +402,7 @@ final class AppViewModel: NSObject, ObservableObject {
             ble.$bluetoothState.map { _ in () }.eraseToAnyPublisher(),
             ble.$devices.map { _ in () }.eraseToAnyPublisher(),
             ble.$connectedDevice.map { _ in () }.eraseToAnyPublisher(),
-            ble.$statusMessage.map { _ in () }.eraseToAnyPublisher(),
+            ble.$status.map { _ in () }.eraseToAnyPublisher(),
             ble.$lastScanDebugText.map { _ in () }.eraseToAnyPublisher()
         ])
         .receive(on: DispatchQueue.main)
@@ -404,12 +435,12 @@ final class AppViewModel: NSObject, ObservableObject {
     }
 
     private func wireCoachSpeech() {
-        training.$coachMessage
+        training.$coachMessageText
             .dropFirst()
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] message in
-                self?.speakCoach(message)
+                self?.speakCoach(message.text)
             }
             .store(in: &cancellables)
     }
@@ -486,7 +517,7 @@ final class AppViewModel: NSObject, ObservableObject {
             return
         }
         let utterance = AVSpeechUtterance(string: message)
-        utterance.voice = AVSpeechSynthesisVoice(language: "zh-CN")
+        utterance.voice = AVSpeechSynthesisVoice(language: AppLanguage.speechVoiceCode)
         utterance.rate = 0.48
         backgroundPlayer?.volume = 0.22
         speechSynthesizer.speak(utterance)
@@ -527,6 +558,7 @@ final class AppViewModel: NSObject, ObservableObject {
             .flatMap(CloudConsentState.init(rawValue:)) ?? .undecided
         selectedPaletteId = FixedPreference.paletteId
         selectedLanguage = defaults.string(forKey: Keys.language) ?? "zh"
+        AppLanguage.code = selectedLanguage
         selectedSoundEffectId = FixedPreference.soundEffectId
         selectedBackgroundMusicId = FixedPreference.backgroundMusicId
         trainingLevel = max(1, defaults.integer(forKey: Keys.trainingLevel))
