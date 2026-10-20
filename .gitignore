@@ -1,5 +1,6 @@
 # Android build/local machine files
 hitrise-android/.gradle/
+hitrise-android/.kotlin/
 hitrise-android/**/build/
 hitrise-android/local.properties
 *.apk
@@ -22,6 +23,11 @@ server/
 *.sql.gz
 *auth.env
 *server-runtime-params/
+
+# Android release signing key and its passwords
+*.jks
+*.keystore
+keystore.properties
 
 # Generated verification screenshots and UI dumps
 hitrise-deploy/*.png

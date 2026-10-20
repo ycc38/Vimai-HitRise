@@ -1,0 +1,4 @@
+# Keep the Gradle wrapper runnable: LF for the shell script, CRLF for batch files.
+/gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
