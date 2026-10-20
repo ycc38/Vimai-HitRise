@@ -11374,12 +11374,12 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // Android 12+ scans with BLUETOOTH_SCAN (neverForLocation); location is only needed up to Android 11.
     private fun requiredBluetoothPermissions(): List<String> =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             listOf(
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.ACCESS_FINE_LOCATION,
             )
         } else {
             listOf(Manifest.permission.ACCESS_FINE_LOCATION)
